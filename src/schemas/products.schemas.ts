@@ -185,6 +185,58 @@ export const GetKardexProductsBuyedQuerySchema = z.object({
   date_start: z.string().optional(),
   date_end: z.string().optional(),
 });
+
+/**
+ * ============================
+ * KARDEX PRODUCTS SOLD
+ * ============================
+ */
+
+export const CreateKardexProductsSoldSchema = z.object({
+  invoice_id: z.string().optional(),
+  invoice_date: z.string().optional(),
+  person_id: z.string().optional(),
+  person_identification: z.string().optional(),
+  person_name: z.string().optional(),
+  item_id: z.string().optional(),
+  item_code: z.string().optional(),
+  item_name: z.string().optional(),
+  quantity: z.number().optional(),
+  unit_value: z.number().optional(),
+  subtotal_amount: z.number().optional(),
+});
+
+export const UpdateKardexProductsSoldSchema = z.object({
+  invoice_id: z.string().optional(),
+  invoice_date: z.string().optional(),
+  person_id: z.string().optional(),
+  person_identification: z.string().optional(),
+  person_name: z.string().optional(),
+  item_id: z.string().optional(),
+  item_code: z.string().optional(),
+  item_name: z.string().optional(),
+  quantity: z.number().optional(),
+  unit_value: z.number().optional(),
+  subtotal_amount: z.number().optional(),
+});
+
+export const GetKardexProductsSoldQuerySchema = z.object({
+  ref: z.string().min(1, 'ref is required'),
+  page: z.union([z.string(), z.number()]).optional(),
+  limit: z.union([z.string(), z.number()]).optional().refine(
+    (val) => {
+      if (val === undefined) return true;
+      const num = typeof val === 'string' ? parseInt(val, 10) : val;
+      return num >= 1 && num <= 1000;
+    },
+    { message: 'Limit must be between 1 and 1000' }
+  ),
+  invoice_id: z.string().optional(),
+  person_id: z.string().optional(),
+  item_id: z.string().optional(),
+  date_start: z.string().optional(),
+  date_end: z.string().optional(),
+});
 /**
  * ============================
  * RESPONSE
