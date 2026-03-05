@@ -81,6 +81,58 @@ export const GetTopCustomersByProductQuerySchema = z.object({
     { message: 'Limit must be between 1 and 1000' }
   ),
 });
+
+/**
+ * ============================
+ * ALIADO PRODUCTS
+ * ============================
+ */
+
+export const CreateAliadoProductsSchema = z.object({
+  item_id: z.string().optional(),
+  item_code: z.string().optional(),
+  item_name: z.string().optional(),
+  item_image: z.string().optional(),
+  item_description: z.string().optional(),
+  item_cost: z.number().optional(),
+  item_price_sell: z.number().optional(),
+  item_rate_taxes: z.number().optional(),
+  item_taxes: z.number().optional(),
+  item_price_sell_taxes: z.number().optional(),
+  item_stock: z.number().optional(),
+  item_combinated_names: z.string().optional(),
+});
+
+export const UpdateAliadoProductsSchema = z.object({
+  item_id: z.string().optional(),
+  item_code: z.string().optional(),
+  item_name: z.string().optional(),
+  item_image: z.string().optional(),
+  item_description: z.string().optional(),
+  item_cost: z.number().optional(),
+  item_price_sell: z.number().optional(),
+  item_rate_taxes: z.number().optional(),
+  item_taxes: z.number().optional(),
+  item_price_sell_taxes: z.number().optional(),
+  item_stock: z.number().optional(),
+  item_combinated_names: z.string().optional(),
+});
+
+export const GetAliadoProductsQuerySchema = z.object({
+  ref: z.string().min(1, 'ref is required'),
+  page: z.union([z.string(), z.number()]).optional(),
+  limit: z.union([z.string(), z.number()]).optional().refine(
+    (val) => {
+      if (val === undefined) return true;
+      const num = typeof val === 'string' ? parseInt(val, 10) : val;
+      return num >= 1 && num <= 1000;
+    },
+    { message: 'Limit must be between 1 and 1000' }
+  ),
+  item_id: z.string().optional(),
+  item_code: z.string().optional(),
+  item_name: z.string().optional(),
+});
 /**
  * ============================
  * RESPONSE
