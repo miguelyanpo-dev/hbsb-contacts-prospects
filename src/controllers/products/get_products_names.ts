@@ -1,5 +1,4 @@
 import { Context } from 'hono/dist/types/context';
-import { KardexService } from '../../services/products.service';
 import { getDb } from '../../config/db';
 
 export const getProductsNames = async (c: Context) => {
@@ -11,10 +10,19 @@ export const getProductsNames = async (c: Context) => {
 
   const { rows } = await db.query(
     `
-    SELECT code, name, combine_names
-    FROM products
+    SELECT 
+      id,
+      item_id,
+      item_code,
+      item_name,
+      item_image,
+      item_description,
+      item_price_sell_taxes,
+      item_stock,
+      item_combinated_names
+    FROM aliado_products
     WHERE deleted_at IS NULL
-    ORDER BY code
+    ORDER BY item_name ASC
     `
   );
 
