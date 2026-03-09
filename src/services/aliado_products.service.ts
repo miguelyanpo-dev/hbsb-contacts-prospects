@@ -2,14 +2,14 @@ import type { Pool } from 'pg';
 import { ConflictError } from '../utils/errors';
 
 export class AliadoProductsService {
-  // Obtener todos los productos aliados
+  // Obtener todos los productos aliados (solo item_id e item_combinated_names)
   static async getAll(db: Pool) {
     const { rows } = await db.query(
       `
-      SELECT *
+      SELECT item_id, item_combinated_names
       FROM aliado_products
       WHERE deleted_at IS NULL
-      ORDER BY created_at DESC
+      ORDER BY item_combinated_names ASC
       `
     );
     return rows;
