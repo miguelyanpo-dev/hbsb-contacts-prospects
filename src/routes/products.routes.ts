@@ -21,6 +21,7 @@ import { deleteKardexProductsBuyed } from '../controllers/kardex_products_buyed/
 import { getKardexProductsSold } from '../controllers/kardex_products_sold/get_kardex_products_sold';
 import { getKardexProductsSoldById } from '../controllers/kardex_products_sold/get_kardex_products_sold_id';
 import { getKardexProductsSoldQuantityByMonth } from '../controllers/kardex_products_sold/get_kardex_products_sold_quantity_by_month';
+import { getKardexProductsSoldTopCustomers } from '../controllers/kardex_products_sold/get_kardex_products_sold_top_customers';
 import { createKardexProductsSold } from '../controllers/kardex_products_sold/create_kardex_products_sold';
 import { updateKardexProductsSold } from '../controllers/kardex_products_sold/update_kardex_products_sold';
 import { deleteKardexProductsSold } from '../controllers/kardex_products_sold/delete_kardex_products_sold';
@@ -37,6 +38,7 @@ import {
   UpdateKardexProductsSoldSchema,
   GetKardexProductsSoldQuerySchema,
   GetKardexProductsSoldQuantityByMonthQuerySchema,
+  GetKardexProductsSoldTopCustomersQuerySchema,
 } from '../schemas/products.schemas';
 import { ErrorResponse, SuccessResponse } from '../schemas/response.schemas';
 
@@ -805,6 +807,44 @@ router.openapi(
     },
   }),
   getKardexProductsSoldQuantityByMonth as any
+);
+
+// kardex_products_sold top customers by item
+router.openapi(
+  createRoute({
+    method: 'get',
+    path: '/kardex_products_sold/top_customers',
+    request: {
+      query: GetKardexProductsSoldTopCustomersQuerySchema,
+    },
+    responses: {
+      200: {
+        content: {
+          'application/json': {
+            schema: PaginatedProductsResponseSchema,
+          },
+        },
+        description: 'Top customers by quantity sold for a given item_id, paginated and sorted desc',
+      },
+      400: {
+        content: {
+          'application/json': {
+            schema: ErrorResponse,
+          },
+        },
+        description: 'Bad Request',
+      },
+      500: {
+        content: {
+          'application/json': {
+            schema: ErrorResponse,
+          },
+        },
+        description: 'Internal Server Error',
+      },
+    },
+  }),
+  getKardexProductsSoldTopCustomers as any
 );
 
 // Routes GET by id

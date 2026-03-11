@@ -224,6 +224,20 @@ export const GetKardexProductsSoldQuantityByMonthQuerySchema = z.object({
   item_id: z.string().min(1, 'item_id is required'),
 });
 
+export const GetKardexProductsSoldTopCustomersQuerySchema = z.object({
+  ref: z.string().min(1, 'ref is required'),
+  item_id: z.string().min(1, 'item_id is required'),
+  page: z.union([z.string(), z.number()]).optional(),
+  limit: z.union([z.string(), z.number()]).optional().refine(
+    (val) => {
+      if (val === undefined) return true;
+      const num = typeof val === 'string' ? parseInt(val, 10) : val;
+      return num >= 1 && num <= 1000;
+    },
+    { message: 'Limit must be between 1 and 1000' }
+  ),
+});
+
 export const GetKardexProductsSoldQuerySchema = z.object({
   ref: z.string().min(1, 'ref is required'),
   page: z.union([z.string(), z.number()]).optional(),
