@@ -12,6 +12,3 @@ export const ErrorResponse = z.object({
   error: z.string(),
   message: z.string().optional(),
 });
-
-// Schema para los parámetros de query de sellers (sin parámetros por ahora)
-export const SellersQuerySchema = z.object({});
