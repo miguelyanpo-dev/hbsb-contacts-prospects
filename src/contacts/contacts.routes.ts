@@ -10,6 +10,7 @@ import {
   PaginatedContactsSchema,
   SingleContactResponseSchema,
   DeleteContactResponseSchema,
+  RefQuerySchema,
 } from './contacts.schema';
 import {
   listContacts,
@@ -33,7 +34,8 @@ const listContactsRoute = createRoute({
   tags: ['Contacts'],
   summary: 'Listar contactos prospectos/clientes',
   description:
-    'Retorna una lista paginada de contactos. Por defecto filtra `is_prospect=true` y `is_customer=true`.',
+    'Retorna una lista paginada de contactos. Por defecto filtra `is_prospect=true` y `is_customer=true`. ' +
+    'El parámetro `ref` identifica la base de datos del tenant (ID del proyecto Supabase).',
   request: {
     query: ContactQuerySchema,
   },
@@ -77,6 +79,7 @@ const getContactRoute = createRoute({
   summary: 'Obtener un contacto por ID',
   request: {
     params: ContactParamSchema,
+    query: RefQuerySchema,
   },
   responses: {
     200: {
@@ -124,6 +127,7 @@ const createContactRoute = createRoute({
   tags: ['Contacts'],
   summary: 'Crear un nuevo contacto',
   request: {
+    query: RefQuerySchema,
     body: {
       content: { 'application/json': { schema: ContactCreateSchema } },
       required: true,
@@ -169,6 +173,7 @@ const updateContactRoute = createRoute({
   summary: 'Actualizar un contacto',
   request: {
     params: ContactParamSchema,
+    query: RefQuerySchema,
     body: {
       content: { 'application/json': { schema: ContactUpdateSchema } },
       required: true,
@@ -224,6 +229,7 @@ const deleteContactRoute = createRoute({
   request: {
     params: ContactParamSchema,
     query: z.object({
+      ref: z.string().min(1, 'El parámetro ref es requerido'),
       deleted_by_user_id: z.string().uuid().optional(),
     }),
   },

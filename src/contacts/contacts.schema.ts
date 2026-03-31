@@ -43,9 +43,16 @@ export const ContactParamSchema = z.object({
   id: z.string().uuid('El ID del contacto debe ser un UUID válido'),
 });
 
+// ─── Shared ref schema (multi-tenant DB resolver) ─────────────────────────────
+
+export const RefQuerySchema = z.object({
+  ref: z.string().min(1, 'El parámetro ref es requerido'),
+});
+
 // ─── Query params schema (all strings; booleans are 'true'|'false') ───────────
 
 export const ContactQuerySchema = z.object({
+  ref: z.string().min(1, 'El parámetro ref es requerido'),
   // Prospect and customer filters default to true
   is_prospect: z.enum(['true', 'false']).optional(),
   is_customer: z.enum(['true', 'false']).optional(),
