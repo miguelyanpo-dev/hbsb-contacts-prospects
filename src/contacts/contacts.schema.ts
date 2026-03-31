@@ -1,6 +1,27 @@
 import { z } from 'zod';
 
-// ─── Contact entity schema (DB response) ──────────────────────────────────────
+// ─── Contact list item (simplified + city/region join) ────────────────────────
+
+export const ContactListItemSchema = z.object({
+  id_contact: z.string().uuid(),
+  identification: z.string().nullable(),
+  company_name: z.string().nullable(),
+  contact_name: z.string().nullable(),
+  phone_mobile: z.string().nullable(),
+  email: z.string().nullable(),
+  address: z.string().nullable(),
+  id_city: z.number().int().nullable(),
+  city_name: z.string().nullable(),
+  region_name: z.string().nullable(),
+  created_at: z.string().nullable(),
+  created_by_user_id: z.string().uuid().nullable(),
+  updated_at: z.string().nullable(),
+  updated_by_user_id: z.string().uuid().nullable(),
+});
+
+export type ContactListItem = z.infer<typeof ContactListItemSchema>;
+
+// ─── Contact full detail schema (includes all fields + city/region) ────────────
 
 export const ContactSchema = z.object({
   id_contact: z.string().uuid(),
@@ -27,6 +48,8 @@ export const ContactSchema = z.object({
   id_status_employee: z.string().uuid().nullable(),
   id_status_seller: z.string().uuid().nullable(),
   id_city: z.number().int().nullable(),
+  city_name: z.string().nullable(),
+  region_name: z.string().nullable(),
   created_at: z.string().nullable(),
   created_by_user_id: z.string().uuid().nullable(),
   updated_at: z.string().nullable(),
@@ -153,7 +176,7 @@ export type ContactUpdate = z.infer<typeof ContactUpdateSchema>;
 
 export const PaginatedContactsSchema = z.object({
   success: z.boolean(),
-  data: z.array(ContactSchema),
+  data: z.array(ContactListItemSchema),
   data_items: z.number(),
   page_current: z.number(),
   page_total: z.number(),

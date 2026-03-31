@@ -1,89 +1,121 @@
 import type { Pool } from 'pg';
 import type { ContactFilters, ContactCreate, ContactUpdate } from './contacts.schema';
 
-const SELECT_COLUMNS = `
-  id_contact,
-  identification,
-  company_name,
-  contact_name,
-  phone_mobile,
-  email,
-  address,
-  is_customer,
-  is_supplier,
-  is_employee,
-  is_seller,
-  is_in_external_software,
-  is_prospect,
-  is_in_my_followups,
-  is_in_reassigned,
-  is_excluded,
-  is_blacklisted,
-  id_seller,
-  id_status_customer,
-  id_status_prospect,
-  id_status_supplier,
-  id_status_employee,
-  id_status_seller,
-  id_city,
-  created_at,
-  created_by_user_id,
-  updated_at,
-  updated_by_user_id,
-  deleted_at,
-  deleted_by_user_id
+// ─── Column lists ──────────────────────────────────────────────────────────────
+
+/**
+ * Columns for the paginated list: simplified fields + city/region via JOIN.
+ */
+const LIST_SELECT = `
+  c.id_contact,
+  c.identification,
+  c.company_name,
+  c.contact_name,
+  c.phone_mobile,
+  c.email,
+  c.address,
+  c.id_city,
+  ci.city_name,
+  r.region_name,
+  c.created_at,
+  c.created_by_user_id,
+  c.updated_at,
+  c.updated_by_user_id
+`;
+
+/**
+ * Columns for the detail view: all contact fields + city/region via JOIN.
+ */
+const DETAIL_SELECT = `
+  c.id_contact,
+  c.identification,
+  c.company_name,
+  c.contact_name,
+  c.phone_mobile,
+  c.email,
+  c.address,
+  c.is_customer,
+  c.is_supplier,
+  c.is_employee,
+  c.is_seller,
+  c.is_in_external_software,
+  c.is_prospect,
+  c.is_in_my_followups,
+  c.is_in_reassigned,
+  c.is_excluded,
+  c.is_blacklisted,
+  c.id_seller,
+  c.id_status_customer,
+  c.id_status_prospect,
+  c.id_status_supplier,
+  c.id_status_employee,
+  c.id_status_seller,
+  c.id_city,
+  ci.city_name,
+  r.region_name,
+  c.created_at,
+  c.created_by_user_id,
+  c.updated_at,
+  c.updated_by_user_id,
+  c.deleted_at,
+  c.deleted_by_user_id
+`;
+
+const CITY_JOINS = `
+  LEFT JOIN public.cities ci ON ci.id_city = c.id_city
+  LEFT JOIN public.regions r ON r.id_region = ci.id_region
 `;
 
 // ─── Find all contacts (paginated + filtered) ──────────────────────────────────
 
 export async function findAllContacts(db: Pool, filters: ContactFilters) {
-  const conditions: string[] = ['deleted_at IS NULL'];
+  const conditions: string[] = ['c.deleted_at IS NULL'];
   const params: unknown[] = [];
   let idx = 1;
 
-  conditions.push(`is_prospect = $${idx++}`);
+  conditions.push(`c.is_prospect = $${idx++}`);
   params.push(filters.is_prospect);
 
-  conditions.push(`is_customer = $${idx++}`);
+  conditions.push(`c.is_customer = $${idx++}`);
   params.push(filters.is_customer);
 
   if (filters.is_supplier !== undefined) {
-    conditions.push(`is_supplier = $${idx++}`);
+    conditions.push(`c.is_supplier = $${idx++}`);
     params.push(filters.is_supplier);
   }
 
   if (filters.is_employee !== undefined) {
-    conditions.push(`is_employee = $${idx++}`);
+    conditions.push(`c.is_employee = $${idx++}`);
     params.push(filters.is_employee);
   }
 
   if (filters.is_seller_flag !== undefined) {
-    conditions.push(`is_seller = $${idx++}`);
+    conditions.push(`c.is_seller = $${idx++}`);
     params.push(filters.is_seller_flag);
   }
 
   if (filters.is_blacklisted !== undefined) {
-    conditions.push(`is_blacklisted = $${idx++}`);
+    conditions.push(`c.is_blacklisted = $${idx++}`);
     params.push(filters.is_blacklisted);
   }
 
   if (filters.is_excluded !== undefined) {
-    conditions.push(`is_excluded = $${idx++}`);
+    conditions.push(`c.is_excluded = $${idx++}`);
     params.push(filters.is_excluded);
   }
 
   if (filters.is_in_my_followups !== undefined) {
-    conditions.push(`is_in_my_followups = $${idx++}`);
+    conditions.push(`c.is_in_my_followups = $${idx++}`);
     params.push(filters.is_in_my_followups);
   }
 
   if (filters.id_seller) {
-    conditions.push(`id_seller = $${idx++}`);
+    conditions.push(`c.id_seller = $${idx++}`);
     params.push(filters.id_seller);
   }
 
   if (filters.id_city !== undefined) {
-    conditions.push(`id_city = $${idx++}`);
+    conditions.push(`c.id_city = $${idx++}`);
     params.push(filters.id_city);
   }
 
@@ -91,7 +123,7 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     const pattern = `%${filters.search}%`;
     const p = idx++;
     conditions.push(
-      `(contact_name ILIKE $${p} OR company_name ILIKE $${p} OR identification ILIKE $${p} OR email ILIKE $${p} OR phone_mobile ILIKE $${p})`
+      `(c.contact_name ILIKE $${p} OR c.company_name ILIKE $${p} OR c.identification ILIKE $${p} OR c.email ILIKE $${p} OR c.phone_mobile ILIKE $${p})`
     );
     params.push(pattern);
   }
@@ -100,16 +132,19 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
   const offset = (filters.page - 1) * filters.limit;
 
   const countResult = await db.query(
-    `SELECT COUNT(*)::int AS total FROM public.contacts WHERE ${where}`,
+    `SELECT COUNT(*)::int AS total
+     FROM public.contacts c
+     WHERE ${where}`,
     params
   );
   const total: number = countResult.rows[0]?.total ?? 0;
 
   const dataResult = await db.query(
-    `SELECT ${SELECT_COLUMNS}
-     FROM public.contacts
+    `SELECT ${LIST_SELECT}
+     FROM public.contacts c
+     ${CITY_JOINS}
      WHERE ${where}
-     ORDER BY created_at DESC
+     ORDER BY c.created_at DESC
      LIMIT $${idx++} OFFSET $${idx++}`,
     [...params, filters.limit, offset]
   );
@@ -117,13 +152,14 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
   return { rows: dataResult.rows, total };
 }
 
-// ─── Find one contact by PK ───────────────────────────────────────────────────
+// ─── Find one contact by PK (full detail) ─────────────────────────────────────
 
 export async function findContactById(db: Pool, id: string) {
   const result = await db.query(
-    `SELECT ${SELECT_COLUMNS}
-     FROM public.contacts
-     WHERE id_contact = $1 AND deleted_at IS NULL`,
+    `SELECT ${DETAIL_SELECT}
+     FROM public.contacts c
+     ${CITY_JOINS}
+     WHERE c.id_contact = $1 AND c.deleted_at IS NULL`,
     [id]
   );
   return result.rows[0] ?? null;
@@ -172,13 +208,16 @@ export async function createContact(db: Pool, data: ContactCreate) {
     }
   }
 
-  const result = await db.query(
+  // INSERT and return full detail with JOINs
+  const inserted = await db.query(
     `INSERT INTO public.contacts (${columns.join(', ')})
      VALUES (${placeholders.join(', ')})
-     RETURNING ${SELECT_COLUMNS}`,
+     RETURNING id_contact`,
     params
   );
-  return result.rows[0];
+
+  const newId: string = inserted.rows[0].id_contact;
+  return findContactById(db, newId);
 }
 
 // ─── Update contact ────────────────────────────────────────────────────────────
@@ -222,7 +261,7 @@ export async function updateContact(db: Pool, id: string, data: ContactUpdate) {
     }
   }
 
-  if (setClauses.length === 0) return null;
+  if (setClauses.length === 0) return findContactById(db, id);
 
   setClauses.push(`updated_at = NOW()`);
   params.push(id);
@@ -231,10 +270,12 @@ export async function updateContact(db: Pool, id: string, data: ContactUpdate) {
     `UPDATE public.contacts
      SET ${setClauses.join(', ')}
      WHERE id_contact = $${idx} AND deleted_at IS NULL
-     RETURNING ${SELECT_COLUMNS}`,
+     RETURNING id_contact`,
     params
   );
-  return result.rows[0] ?? null;
+
+  if (!result.rows[0]) return null;
+  return findContactById(db, id);
 }
 
 // ─── Soft delete contact ───────────────────────────────────────────────────────
