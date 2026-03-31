@@ -4,6 +4,7 @@ import { swaggerUI } from '@hono/swagger-ui';
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { logger } from './middlewares/logger';
 import { config } from './config/config';
+import contactsRoutes from './contacts/contacts.routes';
 
 const app = new Hono();
 const apiV1 = new OpenAPIHono();
@@ -24,9 +25,9 @@ app.use('*', logger());
 apiV1.doc('/openapi.json', {
   openapi: '3.0.0',
   info: {
-    title: 'Get products API',
+    title: 'Contacts & Prospects API',
     version: '1.0.0',
-    description: 'API REST para gestionar productos.',
+    description: 'API REST para gestionar contactos, clientes y prospectos.',
   },
   servers: [
     {
@@ -41,6 +42,9 @@ apiV1.doc('/openapi.json', {
 });
 
 apiV1.get('/doc', swaggerUI({ url: '/api/v1/openapi.json' }));
+
+// Feature routes
+apiV1.route('/', contactsRoutes);
 
 app.route('/api/v1', apiV1);
 
