@@ -81,6 +81,10 @@ export const FIELD_MAP: Record<string, string> = {
   city_name:          'ci.city_name',
   region_name:        'r.region_name',
   tag_name:           't.tag_name',
+  // Notes LATERAL fields — resolved via conditional LATERAL JOIN below
+  quantity_notes:     'COALESCE(ln.quantity_notes, 0)',
+  title:              'ln.title',
+  tab_name:           'ln.tag_name',
   created_at:         'c.created_at',
   created_by_user_id: 'c.created_by_user_id',
   updated_at:         'c.updated_at',
@@ -169,11 +173,30 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     ? 'LEFT JOIN public.tags t ON t.id_tag = c.id_tag'
     : '';
 
+  // LATERAL JOIN for notes-related fields: quantity_notes, title, tab_name.
+  // COUNT(*) OVER() is evaluated before LIMIT, giving the total note count
+  // while LIMIT 1 returns only the most recent note's columns.
+  const notesFields = ['quantity_notes', 'title', 'tab_name'];
+  const notesJoin = filters.fields?.some(f => notesFields.includes(f))
+    ? `LEFT JOIN LATERAL (
+        SELECT
+          COUNT(*) OVER ()::int AS quantity_notes,
+          n.title,
+          t2.tag_name
+        FROM public.notes n
+        LEFT JOIN public.tags t2 ON t2.id_tag = n.id_tag
+        WHERE n.id_contact = c.id_contact AND n.deleted_at IS NULL
+        ORDER BY n.created_at DESC
+        LIMIT 1
+      ) ln ON true`
+    : '';
+
   const dataResult = await db.query(
     `SELECT ${selectClause}
      FROM public.contacts c
      ${CITY_JOINS}
      ${tagJoin}
+     ${notesJoin}
      WHERE ${where}
      ORDER BY c.created_at DESC
      LIMIT $${idx++} OFFSET $${idx++}`,
