@@ -80,6 +80,7 @@ export const FIELD_MAP: Record<string, string> = {
   id_city:            'c.id_city',
   city_name:          'ci.city_name',
   region_name:        'r.region_name',
+  tag_name:           't.tag_name',
   created_at:         'c.created_at',
   created_by_user_id: 'c.created_by_user_id',
   updated_at:         'c.updated_at',
@@ -164,10 +165,15 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
       ? filters.fields.map((f) => `${FIELD_MAP[f]} AS ${f}`).join(', ')
       : LIST_SELECT;
 
+  const tagJoin = filters.fields?.includes('tag_name')
+    ? 'LEFT JOIN public.tags t ON t.id_tag = c.id_tag'
+    : '';
+
   const dataResult = await db.query(
     `SELECT ${selectClause}
      FROM public.contacts c
      ${CITY_JOINS}
+     ${tagJoin}
      WHERE ${where}
      ORDER BY c.created_at DESC
      LIMIT $${idx++} OFFSET $${idx++}`,
