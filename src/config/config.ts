@@ -3,6 +3,11 @@ export const config = {
   env: process.env.NODE_ENV || 'development',
   productionUrl: process.env.PRODUCTION_URL || 'https://hbsb-limpio.vercel.app',
   cors: {
-    origins: process.env.CORS_ORIGIN?.split(',').map(o => o.trim()) || ['*']
-  }
-} as const;
+    // When CORS_ORIGIN is not set, use '*' (string) not ['*'] (array).
+    // Hono's CORS middleware treats an array as an allowlist: ['*'] would only
+    // match the literal origin "*", which no browser ever sends.
+    origins: process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
+      : '*',
+  },
+};
