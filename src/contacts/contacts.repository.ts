@@ -195,9 +195,13 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
   const notesJoin = filters.fields?.some(f => notesFields.includes(f))
     ? `LEFT JOIN LATERAL (
         SELECT
-          COUNT(*) OVER ()::int AS quantity_notes,
           n.title,
-          t2.tag_name
+          t2.tag_name,
+          (
+            SELECT COUNT(*)::int
+            FROM public.notes n2
+            WHERE n2.id_contact = c.id_contact AND n2.deleted_at IS NULL
+          ) AS quantity_notes
         FROM public.notes n
         LEFT JOIN public.tags t2 ON t2.id_tag = n.id_tag
         WHERE n.id_contact = c.id_contact AND n.deleted_at IS NULL
