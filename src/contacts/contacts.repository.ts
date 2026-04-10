@@ -66,6 +66,27 @@ const CITY_JOINS = `
   LEFT JOIN public.regions r ON r.id_region = ci.id_region
 `;
 
+// ─── Field whitelist for dynamic SELECT ───────────────────────────────────────
+// Keys = query param names. Values = SQL expressions (code constants, never user input).
+
+export const FIELD_MAP: Record<string, string> = {
+  id_contact:         'c.id_contact',
+  identification:     'c.identification',
+  company_name:       'c.company_name',
+  contact_name:       'c.contact_name',
+  phone_mobile:       'c.phone_mobile',
+  email:              'c.email',
+  address:            'c.address',
+  id_city:            'c.id_city',
+  city_name:          'ci.city_name',
+  region_name:        'r.region_name',
+  tag_name:           't.tag_name',
+  created_at:         'c.created_at',
+  created_by_user_id: 'c.created_by_user_id',
+  updated_at:         'c.updated_at',
+  updated_by_user_id: 'c.updated_by_user_id',
+};
+
 // ─── Find all contacts (paginated + filtered) ──────────────────────────────────
 
 export async function findAllContacts(db: Pool, filters: ContactFilters) {
@@ -139,10 +160,20 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
   );
   const total: number = countResult.rows[0]?.total ?? 0;
 
+  const selectClause =
+    filters.fields && filters.fields.length > 0
+      ? filters.fields.map((f) => `${FIELD_MAP[f]} AS ${f}`).join(', ')
+      : LIST_SELECT;
+
+  const tagJoin = filters.fields?.includes('tag_name')
+    ? 'LEFT JOIN public.tags t ON t.id_tag = c.id_tag'
+    : '';
+
   const dataResult = await db.query(
-    `SELECT ${LIST_SELECT}
+    `SELECT ${selectClause}
      FROM public.contacts c
      ${CITY_JOINS}
+     ${tagJoin}
      WHERE ${where}
      ORDER BY c.created_at DESC
      LIMIT $${idx++} OFFSET $${idx++}`,
