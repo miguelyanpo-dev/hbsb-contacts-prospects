@@ -6,8 +6,8 @@ export const config = {
     // When CORS_ORIGIN is not set, use '*' (string) not ['*'] (array).
     // Hono's CORS middleware treats an array as an allowlist: ['*'] would only
     // match the literal origin "*", which no browser ever sends.
-    origins: process.env.CORS_ORIGIN
-      ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
-      : '*',
+    origins: !process.env.CORS_ORIGIN || process.env.CORS_ORIGIN.trim() === '*'
+      ? '*'
+      : process.env.CORS_ORIGIN.split(',').map(o => o.trim()),
   },
 };
