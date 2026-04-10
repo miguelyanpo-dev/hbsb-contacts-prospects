@@ -159,8 +159,13 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
   );
   const total: number = countResult.rows[0]?.total ?? 0;
 
+  const selectClause =
+    filters.fields && filters.fields.length > 0
+      ? filters.fields.map((f) => `${FIELD_MAP[f]} AS ${f}`).join(', ')
+      : LIST_SELECT;
+
   const dataResult = await db.query(
-    `SELECT ${LIST_SELECT}
+    `SELECT ${selectClause}
      FROM public.contacts c
      ${CITY_JOINS}
      WHERE ${where}
