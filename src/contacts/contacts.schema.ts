@@ -75,11 +75,13 @@ export const RefQuerySchema = z.object({
 // ─── Query params schema (all strings; booleans are 'true'|'false') ───────────
 
 export const ContactQuerySchema = z.object({
-  ref:     z.string().min(1, 'El parámetro ref es requerido'),
-  fields:  z.string().optional(),
-  filters: z.string().optional(),
-  page:    z.string().regex(/^\d+$/, 'page debe ser un entero').optional(),
-  limit:   z.string().regex(/^\d+$/, 'limit debe ser un entero').optional(),
+  ref:          z.string().min(1, 'El parámetro ref es requerido'),
+  fields:       z.string().optional(),
+  filters:      z.string().optional(),
+  is_prospect:  z.enum(['true', 'false']).optional(),
+  is_customer:  z.enum(['true', 'false']).optional(),
+  page:         z.string().regex(/^\d+$/, 'page debe ser un entero').optional(),
+  limit:        z.string().regex(/^\d+$/, 'limit debe ser un entero').optional(),
 });
 
 export type ContactQueryRaw = z.infer<typeof ContactQuerySchema>;

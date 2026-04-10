@@ -81,6 +81,14 @@ export function parseFieldsString(raw?: string): string[] {
 
 export async function listContacts(db: Pool, rawQuery: ContactQueryRaw) {
   const filtersBase = parseFiltersString(rawQuery.filters);
+
+  if (rawQuery.is_prospect !== undefined) {
+    filtersBase.is_prospect = rawQuery.is_prospect === 'true';
+  }
+  if (rawQuery.is_customer !== undefined) {
+    filtersBase.is_customer = rawQuery.is_customer === 'true';
+  }
+
   const fields = parseFieldsString(rawQuery.fields);
   const page = rawQuery.page !== undefined ? Math.max(1, parseInt(rawQuery.page, 10)) : 1;
   const limit =
