@@ -32,10 +32,7 @@ const BOOLEAN_FILTER_KEYS = new Set([
 export function parseFiltersString(
   raw?: string,
 ): Omit<ContactFilters, 'fields' | 'page' | 'limit'> {
-  const result: Omit<ContactFilters, 'fields' | 'page' | 'limit'> = {
-    is_prospect: true,
-    is_customer: true,
-  };
+  const result: Omit<ContactFilters, 'fields' | 'page' | 'limit'> = {};
 
   if (!raw) return result;
 

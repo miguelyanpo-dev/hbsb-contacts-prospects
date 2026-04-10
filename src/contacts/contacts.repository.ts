@@ -98,11 +98,15 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
   const params: unknown[] = [];
   let idx = 1;
 
-  conditions.push(`c.is_prospect = $${idx++}`);
-  params.push(filters.is_prospect);
+  if (filters.is_prospect !== undefined) {
+    conditions.push(`c.is_prospect = $${idx++}`);
+    params.push(filters.is_prospect);
+  }
 
-  conditions.push(`c.is_customer = $${idx++}`);
-  params.push(filters.is_customer);
+  if (filters.is_customer !== undefined) {
+    conditions.push(`c.is_customer = $${idx++}`);
+    params.push(filters.is_customer);
+  }
 
   if (filters.is_supplier !== undefined) {
     conditions.push(`c.is_supplier = $${idx++}`);

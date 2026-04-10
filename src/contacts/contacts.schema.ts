@@ -85,8 +85,8 @@ export const ContactQuerySchema = z.object({
 export type ContactQueryRaw = z.infer<typeof ContactQuerySchema>;
 
 export interface ContactFilters {
-  is_prospect: boolean;
-  is_customer: boolean;
+  is_prospect?: boolean;
+  is_customer?: boolean;
   is_supplier?: boolean;
   is_employee?: boolean;
   is_seller_flag?: boolean;

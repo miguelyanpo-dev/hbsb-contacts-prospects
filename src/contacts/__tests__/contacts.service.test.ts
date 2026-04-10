@@ -2,12 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { parseFiltersString, parseFieldsString } from '../contacts.service';
 
 describe('parseFiltersString', () => {
-  it('returns defaults when raw is undefined', () => {
-    expect(parseFiltersString(undefined)).toEqual({ is_prospect: true, is_customer: true });
+  it('returns empty object when raw is undefined', () => {
+    expect(parseFiltersString(undefined)).toEqual({});
   });
 
-  it('returns defaults when raw is empty string', () => {
-    expect(parseFiltersString('')).toEqual({ is_prospect: true, is_customer: true });
+  it('returns empty object when raw is empty string', () => {
+    expect(parseFiltersString('')).toEqual({});
   });
 
   it('parses boolean filter to true', () => {
@@ -54,7 +54,7 @@ describe('parseFiltersString', () => {
 
   it('ignores unknown keys silently', () => {
     const result = parseFiltersString('unknown_key:value');
-    expect(result).toEqual({ is_prospect: true, is_customer: true });
+    expect(result).toEqual({});
   });
 
   it('ignores pairs without a colon', () => {
