@@ -175,6 +175,8 @@ export const PaginatedContactsSchema = z.object({
   page_total: z.number(),
   have_next_page: z.boolean(),
   have_previous_page: z.boolean(),
+  total_customers: z.number(),
+  total_prospects: z.number(),
 });
 
 export const SingleContactResponseSchema = z.object({

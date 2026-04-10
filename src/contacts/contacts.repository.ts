@@ -160,13 +160,24 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
   const where = conditions.join(' AND ');
   const offset = (filters.page - 1) * filters.limit;
 
-  const countResult = await db.query(
-    `SELECT COUNT(*)::int AS total
-     FROM public.contacts c
-     WHERE ${where}`,
-    params
-  );
+  const [countResult, totalsResult] = await Promise.all([
+    db.query(
+      `SELECT COUNT(*)::int AS total
+       FROM public.contacts c
+       WHERE ${where}`,
+      params
+    ),
+    db.query(
+      `SELECT
+         COUNT(*) FILTER (WHERE is_customer = true AND is_prospect = false)::int AS total_customers,
+         COUNT(*) FILTER (WHERE is_customer = true AND is_prospect = true)::int  AS total_prospects
+       FROM public.contacts
+       WHERE deleted_at IS NULL`
+    ),
+  ]);
   const total: number = countResult.rows[0]?.total ?? 0;
+  const total_customers: number = totalsResult.rows[0]?.total_customers ?? 0;
+  const total_prospects: number = totalsResult.rows[0]?.total_prospects ?? 0;
 
   const selectClause =
     filters.fields && filters.fields.length > 0
@@ -207,7 +218,7 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     [...params, filters.limit, offset]
   );
 
-  return { rows: dataResult.rows, total };
+  return { rows: dataResult.rows, total, total_customers, total_prospects };
 }
 
 // ─── Find one contact by PK (full detail) ─────────────────────────────────────

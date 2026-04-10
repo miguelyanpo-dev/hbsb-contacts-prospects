@@ -101,8 +101,12 @@ export async function listContacts(db: Pool, rawQuery: ContactQueryRaw) {
     limit,
   };
 
-  const { rows, total } = await findAllContacts(db, filters);
-  return buildPaginatedResponse(rows, total, page, limit);
+  const { rows, total, total_customers, total_prospects } = await findAllContacts(db, filters);
+  return {
+    ...buildPaginatedResponse(rows, total, page, limit),
+    total_customers,
+    total_prospects,
+  };
 }
 
 // ─── Get single contact ────────────────────────────────────────────────────────
