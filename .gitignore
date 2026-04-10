@@ -77,3 +77,6 @@ ehthumbs.db
 *.cache
 *.tmp
 .vercel
+
+# Git worktrees
+.worktrees/
