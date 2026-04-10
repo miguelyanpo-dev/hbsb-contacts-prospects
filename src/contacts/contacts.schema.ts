@@ -177,6 +177,11 @@ export const PaginatedContactsSchema = z.object({
   have_previous_page: z.boolean(),
   total_customers: z.number(),
   total_prospects: z.number(),
+  total_nuevos: z.number(),
+  total_en_contacto: z.number(),
+  total_pendiente: z.number(),
+  total_con_exito: z.number(),
+  total_fallido: z.number(),
 });
 
 export const SingleContactResponseSchema = z.object({

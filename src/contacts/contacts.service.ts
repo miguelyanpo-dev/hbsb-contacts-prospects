@@ -101,11 +101,20 @@ export async function listContacts(db: Pool, rawQuery: ContactQueryRaw) {
     limit,
   };
 
-  const { rows, total, total_customers, total_prospects } = await findAllContacts(db, filters);
+  const {
+    rows, total,
+    total_customers, total_prospects,
+    total_nuevos, total_en_contacto, total_pendiente, total_con_exito, total_fallido,
+  } = await findAllContacts(db, filters);
   return {
     ...buildPaginatedResponse(rows, total, page, limit),
     total_customers,
     total_prospects,
+    total_nuevos,
+    total_en_contacto,
+    total_pendiente,
+    total_con_exito,
+    total_fallido,
   };
 }
 

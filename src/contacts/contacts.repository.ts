@@ -170,14 +170,24 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     db.query(
       `SELECT
          COUNT(*) FILTER (WHERE is_customer = true AND is_prospect = false)::int AS total_customers,
-         COUNT(*) FILTER (WHERE is_customer = true AND is_prospect = true)::int  AS total_prospects
+         COUNT(*) FILTER (WHERE is_customer = true AND is_prospect = true)::int  AS total_prospects,
+         COUNT(*) FILTER (WHERE id_tag = 1)::int AS total_nuevos,
+         COUNT(*) FILTER (WHERE id_tag = 2)::int AS total_en_contacto,
+         COUNT(*) FILTER (WHERE id_tag = 3)::int AS total_pendiente,
+         COUNT(*) FILTER (WHERE id_tag = 4)::int AS total_con_exito,
+         COUNT(*) FILTER (WHERE id_tag = 5)::int AS total_fallido
        FROM public.contacts
        WHERE deleted_at IS NULL`
     ),
   ]);
   const total: number = countResult.rows[0]?.total ?? 0;
-  const total_customers: number = totalsResult.rows[0]?.total_customers ?? 0;
-  const total_prospects: number = totalsResult.rows[0]?.total_prospects ?? 0;
+  const total_customers: number    = totalsResult.rows[0]?.total_customers ?? 0;
+  const total_prospects: number    = totalsResult.rows[0]?.total_prospects ?? 0;
+  const total_nuevos: number       = totalsResult.rows[0]?.total_nuevos ?? 0;
+  const total_en_contacto: number  = totalsResult.rows[0]?.total_en_contacto ?? 0;
+  const total_pendiente: number    = totalsResult.rows[0]?.total_pendiente ?? 0;
+  const total_con_exito: number    = totalsResult.rows[0]?.total_con_exito ?? 0;
+  const total_fallido: number      = totalsResult.rows[0]?.total_fallido ?? 0;
 
   const selectClause =
     filters.fields && filters.fields.length > 0
@@ -222,7 +232,17 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     [...params, filters.limit, offset]
   );
 
-  return { rows: dataResult.rows, total, total_customers, total_prospects };
+  return {
+    rows: dataResult.rows,
+    total,
+    total_customers,
+    total_prospects,
+    total_nuevos,
+    total_en_contacto,
+    total_pendiente,
+    total_con_exito,
+    total_fallido,
+  };
 }
 
 // ─── Find one contact by PK (full detail) ─────────────────────────────────────
