@@ -186,6 +186,12 @@ export const PaginatedContactsSchema = z.object({
   total_reasignados: z.number(),
   total_excluidos: z.number(),
   total_lista_negra: z.number(),
+  total_calientes: z.number(),
+  total_tibios: z.number(),
+  total_frios: z.number(),
+  total_dormidos: z.number(),
+  total_perdidos: z.number(),
+  total_mas_antiguos: z.number(),
 });
 
 export const SingleContactResponseSchema = z.object({

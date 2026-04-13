@@ -179,7 +179,13 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
          COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND is_in_my_followups = true)::int AS total_seguimiento,
          COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND is_in_reassigned = true)::int AS total_reasignados,
          COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND is_excluded = true)::int AS total_excluidos,
-         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND is_blacklisted = true)::int AS total_lista_negra
+         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND is_blacklisted = true)::int AS total_lista_negra,
+         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND id_tag = 7)::int AS total_calientes,
+         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND id_tag = 8)::int AS total_tibios,
+         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND id_tag = 9)::int AS total_frios,
+         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND id_tag = 10)::int AS total_dormidos,
+         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND id_tag = 11)::int AS total_perdidos,
+         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND id_tag = 12)::int AS total_mas_antiguos
        FROM public.contacts
        WHERE deleted_at IS NULL`
     ),
@@ -196,6 +202,12 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
   const total_reasignados: number  = totalsResult.rows[0]?.total_reasignados ?? 0;
   const total_excluidos: number    = totalsResult.rows[0]?.total_excluidos ?? 0;
   const total_lista_negra: number  = totalsResult.rows[0]?.total_lista_negra ?? 0;
+  const total_calientes: number    = totalsResult.rows[0]?.total_calientes ?? 0;
+  const total_tibios: number       = totalsResult.rows[0]?.total_tibios ?? 0;
+  const total_frios: number        = totalsResult.rows[0]?.total_frios ?? 0;
+  const total_dormidos: number     = totalsResult.rows[0]?.total_dormidos ?? 0;
+  const total_perdidos: number     = totalsResult.rows[0]?.total_perdidos ?? 0;
+  const total_mas_antiguos: number = totalsResult.rows[0]?.total_mas_antiguos ?? 0;
 
   const selectClause =
     filters.fields && filters.fields.length > 0
@@ -254,6 +266,12 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     total_reasignados,
     total_excluidos,
     total_lista_negra,
+    total_calientes,
+    total_tibios,
+    total_frios,
+    total_dormidos,
+    total_perdidos,
+    total_mas_antiguos,
   };
 }
 

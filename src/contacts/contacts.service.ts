@@ -109,6 +109,12 @@ export async function listContacts(db: Pool, rawQuery: ContactQueryRaw) {
     total_reasignados,
     total_excluidos,
     total_lista_negra,
+    total_calientes,
+    total_tibios,
+    total_frios,
+    total_dormidos,
+    total_perdidos,
+    total_mas_antiguos,
   } = await findAllContacts(db, filters);
   return {
     ...buildPaginatedResponse(rows, total, page, limit),
@@ -123,6 +129,12 @@ export async function listContacts(db: Pool, rawQuery: ContactQueryRaw) {
     total_reasignados,
     total_excluidos,
     total_lista_negra,
+    total_calientes,
+    total_tibios,
+    total_frios,
+    total_dormidos,
+    total_perdidos,
+    total_mas_antiguos,
   };
 }
 
