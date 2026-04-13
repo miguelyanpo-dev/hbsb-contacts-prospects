@@ -57,6 +57,14 @@ export function parseFiltersString(
       result.id_seller = value;
     } else if (key === 'search') {
       result.search = value;
+    } else if (key === 'contact_name') {
+      result.contact_name = value;
+    } else if (key === 'identification') {
+      result.identification = value;
+    } else if (key === 'phone_mobile') {
+      result.phone_mobile = value;
+    } else if (key === 'email') {
+      result.email = value;
     }
     // Unknown keys: ignored
   }

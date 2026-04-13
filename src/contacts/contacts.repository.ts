@@ -157,6 +157,26 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     params.push(pattern);
   }
 
+  if (filters.contact_name) {
+    conditions.push(`c.contact_name ILIKE $${idx++}`);
+    params.push(`%${filters.contact_name}%`);
+  }
+
+  if (filters.identification) {
+    conditions.push(`c.identification ILIKE $${idx++}`);
+    params.push(`%${filters.identification}%`);
+  }
+
+  if (filters.phone_mobile) {
+    conditions.push(`c.phone_mobile ILIKE $${idx++}`);
+    params.push(`%${filters.phone_mobile}%`);
+  }
+
+  if (filters.email) {
+    conditions.push(`c.email ILIKE $${idx++}`);
+    params.push(`%${filters.email}%`);
+  }
+
   const where = conditions.join(' AND ');
   const offset = (filters.page - 1) * filters.limit;
 

@@ -96,6 +96,10 @@ export interface ContactFilters {
   is_excluded?: boolean;
   is_in_my_followups?: boolean;
   search?: string;
+  contact_name?: string;
+  identification?: string;
+  phone_mobile?: string;
+  email?: string;
   id_seller?: string;
   id_city?: number;
   fields?: string[];
