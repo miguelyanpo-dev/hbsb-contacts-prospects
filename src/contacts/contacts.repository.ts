@@ -175,7 +175,11 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
          COUNT(*) FILTER (WHERE id_tag = 2)::int AS total_en_contacto,
          COUNT(*) FILTER (WHERE id_tag = 3)::int AS total_pendiente,
          COUNT(*) FILTER (WHERE id_tag = 4)::int AS total_con_exito,
-         COUNT(*) FILTER (WHERE id_tag = 5)::int AS total_fallido
+         COUNT(*) FILTER (WHERE id_tag = 5)::int AS total_fallido,
+         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND is_in_my_followups = true)::int AS total_seguimiento,
+         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND is_in_reassigned = true)::int AS total_reasignados,
+         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND is_excluded = true)::int AS total_excluidos,
+         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND is_blacklisted = true)::int AS total_lista_negra
        FROM public.contacts
        WHERE deleted_at IS NULL`
     ),
@@ -188,6 +192,10 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
   const total_pendiente: number    = totalsResult.rows[0]?.total_pendiente ?? 0;
   const total_con_exito: number    = totalsResult.rows[0]?.total_con_exito ?? 0;
   const total_fallido: number      = totalsResult.rows[0]?.total_fallido ?? 0;
+  const total_seguimiento: number  = totalsResult.rows[0]?.total_seguimiento ?? 0;
+  const total_reasignados: number  = totalsResult.rows[0]?.total_reasignados ?? 0;
+  const total_excluidos: number    = totalsResult.rows[0]?.total_excluidos ?? 0;
+  const total_lista_negra: number  = totalsResult.rows[0]?.total_lista_negra ?? 0;
 
   const selectClause =
     filters.fields && filters.fields.length > 0
@@ -242,6 +250,10 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     total_pendiente,
     total_con_exito,
     total_fallido,
+    total_seguimiento,
+    total_reasignados,
+    total_excluidos,
+    total_lista_negra,
   };
 }
 

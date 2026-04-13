@@ -105,6 +105,10 @@ export async function listContacts(db: Pool, rawQuery: ContactQueryRaw) {
     rows, total,
     total_customers, total_prospects,
     total_nuevos, total_en_contacto, total_pendiente, total_con_exito, total_fallido,
+    total_seguimiento,
+    total_reasignados,
+    total_excluidos,
+    total_lista_negra,
   } = await findAllContacts(db, filters);
   return {
     ...buildPaginatedResponse(rows, total, page, limit),
@@ -115,6 +119,10 @@ export async function listContacts(db: Pool, rawQuery: ContactQueryRaw) {
     total_pendiente,
     total_con_exito,
     total_fallido,
+    total_seguimiento,
+    total_reasignados,
+    total_excluidos,
+    total_lista_negra,
   };
 }
 

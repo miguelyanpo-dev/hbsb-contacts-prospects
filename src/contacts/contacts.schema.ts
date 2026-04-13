@@ -182,6 +182,10 @@ export const PaginatedContactsSchema = z.object({
   total_pendiente: z.number(),
   total_con_exito: z.number(),
   total_fallido: z.number(),
+  total_seguimiento: z.number(),
+  total_reasignados: z.number(),
+  total_excluidos: z.number(),
+  total_lista_negra: z.number(),
 });
 
 export const SingleContactResponseSchema = z.object({
