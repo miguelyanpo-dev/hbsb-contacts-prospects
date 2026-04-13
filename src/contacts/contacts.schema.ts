@@ -75,13 +75,17 @@ export const RefQuerySchema = z.object({
 // ─── Query params schema (all strings; booleans are 'true'|'false') ───────────
 
 export const ContactQuerySchema = z.object({
-  ref:          z.string().min(1, 'El parámetro ref es requerido'),
-  fields:       z.string().optional(),
-  filters:      z.string().optional(),
-  is_prospect:  z.enum(['true', 'false']).optional(),
-  is_customer:  z.enum(['true', 'false']).optional(),
-  page:         z.string().regex(/^\d+$/, 'page debe ser un entero').optional(),
-  limit:        z.string().regex(/^\d+$/, 'limit debe ser un entero').optional(),
+  ref:            z.string().min(1, 'El parámetro ref es requerido'),
+  fields:         z.string().optional(),
+  filters:        z.string().optional(),
+  is_prospect:    z.enum(['true', 'false']).optional(),
+  is_customer:    z.enum(['true', 'false']).optional(),
+  page:           z.string().regex(/^\d+$/, 'page debe ser un entero').optional(),
+  limit:          z.string().regex(/^\d+$/, 'limit debe ser un entero').optional(),
+  contact_name:   z.string().optional().openapi({ description: 'Filtrar por nombre del contacto (búsqueda parcial, case-insensitive)' }),
+  identification: z.string().optional().openapi({ description: 'Filtrar por identificación (búsqueda parcial, case-insensitive)' }),
+  phone_mobile:   z.string().optional().openapi({ description: 'Filtrar por teléfono móvil (búsqueda parcial, case-insensitive)' }),
+  email:          z.string().optional().openapi({ description: 'Filtrar por email (búsqueda parcial, case-insensitive)' }),
 });
 
 export type ContactQueryRaw = z.infer<typeof ContactQuerySchema>;

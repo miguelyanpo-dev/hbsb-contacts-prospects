@@ -96,6 +96,10 @@ export async function listContacts(db: Pool, rawQuery: ContactQueryRaw) {
   if (rawQuery.is_customer !== undefined) {
     filtersBase.is_customer = rawQuery.is_customer === 'true';
   }
+  if (rawQuery.contact_name)   filtersBase.contact_name   = rawQuery.contact_name;
+  if (rawQuery.identification) filtersBase.identification = rawQuery.identification;
+  if (rawQuery.phone_mobile)   filtersBase.phone_mobile   = rawQuery.phone_mobile;
+  if (rawQuery.email)          filtersBase.email          = rawQuery.email;
 
   const fields = parseFieldsString(rawQuery.fields);
   const page = rawQuery.page !== undefined ? Math.max(1, parseInt(rawQuery.page, 10)) : 1;
