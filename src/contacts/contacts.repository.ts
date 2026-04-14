@@ -268,9 +268,9 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     ? `LEFT JOIN LATERAL (
         SELECT jsonb_build_object(
           'id_invoice', i.id_invoice,
-          'public', i."public",
           'date', i."date",
           'due_date', i.due_date,
+          'consecutive', i.consecutive,
           'total_amount', i.total_amount,
           'balance_amount', i.balance_amount,
           'status', i.status
