@@ -264,7 +264,12 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     : '';
 
   const lastInvoiceFields = ['last_invoice', 'last_invoices'];
-  const lastInvoiceJoin = filters.fields?.some(f => lastInvoiceFields.includes(f))
+  const wantsLastInvoice =
+    filters.fields?.some((f) => lastInvoiceFields.includes(f)) ?? false;
+
+  // Deuda abierta: saldo > 0. Entre varias, la más urgente por vencimiento (due_date más antigua),
+  // luego mayor saldo pendiente. Sin deuda, last_invoice queda null.
+  const lastInvoiceJoin = wantsLastInvoice
     ? `LEFT JOIN LATERAL (
         SELECT jsonb_build_object(
           'id_invoice', i.id_invoice,
@@ -277,11 +282,21 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
           'status', i.status
         ) AS last_invoice
         FROM public.invoices i
-        WHERE i.id_contact = c.id_contact AND i.deleted_at IS NULL
-        ORDER BY i.created_at DESC
+        WHERE i.id_contact = c.id_contact
+          AND i.deleted_at IS NULL
+          AND COALESCE(i.balance_amount, 0) > 0
+        ORDER BY i.due_date ASC NULLS LAST, i.balance_amount DESC NULLS LAST, i.id_invoice ASC
         LIMIT 1
       ) li ON true`
     : '';
+
+  // Con last_invoice: contactos con deuda primero; entre deudores, vencimiento más antiguo y mayor saldo.
+  const orderByClause = wantsLastInvoice
+    ? `(li.last_invoice IS NULL) ASC,
+       (li.last_invoice->>'due_date')::timestamptz ASC NULLS LAST,
+       (li.last_invoice->>'balance_amount')::numeric DESC NULLS LAST,
+       c.created_at DESC`
+    : 'c.created_at DESC';
 
   const dataResult = await db.query(
     `SELECT ${selectClause}
@@ -291,7 +306,7 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
      ${notesJoin}
      ${lastInvoiceJoin}
      WHERE ${where}
-     ORDER BY c.created_at DESC
+     ORDER BY ${orderByClause}
      LIMIT $${idx++} OFFSET $${idx++}`,
     [...params, filters.limit, offset]
   );
