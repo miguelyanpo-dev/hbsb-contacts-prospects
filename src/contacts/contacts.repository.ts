@@ -272,6 +272,7 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
           'due_date', i.due_date,
           'consecutive', i.consecutive,
           'total_amount', i.total_amount,
+          'payment_amount', i.payment_amount,
           'balance_amount', i.balance_amount,
           'status', i.status
         ) AS last_invoice
