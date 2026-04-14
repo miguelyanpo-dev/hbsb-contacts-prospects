@@ -100,4 +100,11 @@ describe('parseFieldsString', () => {
       'region_name',
     ]);
   });
+
+  it('allows invoices-backed field last_invoice', () => {
+    expect(parseFieldsString('id_contact,last_invoice')).toEqual([
+      'id_contact',
+      'last_invoice',
+    ]);
+  });
 });

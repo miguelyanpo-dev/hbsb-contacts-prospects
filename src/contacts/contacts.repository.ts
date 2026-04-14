@@ -85,6 +85,7 @@ export const FIELD_MAP: Record<string, string> = {
   quantity_notes:     'COALESCE(ln.quantity_notes, 0)',
   title:              'ln.title',
   tab_name:           'ln.tag_name',
+  last_invoice:       'li.last_invoice',
   created_at:         'c.created_at',
   created_by_user_id: 'c.created_by_user_id',
   updated_at:         'c.updated_at',
@@ -260,12 +261,31 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
       ) ln ON true`
     : '';
 
+  const lastInvoiceJoin = filters.fields?.includes('last_invoice')
+    ? `LEFT JOIN LATERAL (
+        SELECT jsonb_build_object(
+          'id_invoice', i.id_invoice,
+          'public', i.public,
+          'date', i.date,
+          'due_date', i.due_date,
+          'total_amount', i.total_amount,
+          'balance_amount', i.balance_amount,
+          'status', i.status
+        ) AS last_invoice
+        FROM public.invoices i
+        WHERE i.id_contact = c.id_contact AND i.deleted_at IS NULL
+        ORDER BY i.created_at DESC
+        LIMIT 1
+      ) li ON true`
+    : '';
+
   const dataResult = await db.query(
     `SELECT ${selectClause}
      FROM public.contacts c
      ${CITY_JOINS}
      ${tagJoin}
      ${notesJoin}
+     ${lastInvoiceJoin}
      WHERE ${where}
      ORDER BY c.created_at DESC
      LIMIT $${idx++} OFFSET $${idx++}`,
