@@ -86,6 +86,8 @@ export const FIELD_MAP: Record<string, string> = {
   title:              'ln.title',
   tab_name:           'ln.tag_name',
   last_invoice:       'li.last_invoice',
+  // Backward compatibility for clients still requesting plural key.
+  last_invoices:      'li.last_invoice',
   created_at:         'c.created_at',
   created_by_user_id: 'c.created_by_user_id',
   updated_at:         'c.updated_at',
@@ -261,7 +263,8 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
       ) ln ON true`
     : '';
 
-  const lastInvoiceJoin = filters.fields?.includes('last_invoice')
+  const lastInvoiceFields = ['last_invoice', 'last_invoices'];
+  const lastInvoiceJoin = filters.fields?.some(f => lastInvoiceFields.includes(f))
     ? `LEFT JOIN LATERAL (
         SELECT jsonb_build_object(
           'id_invoice', i.id_invoice,

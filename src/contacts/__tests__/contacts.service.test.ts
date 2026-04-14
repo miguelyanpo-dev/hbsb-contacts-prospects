@@ -107,4 +107,11 @@ describe('parseFieldsString', () => {
       'last_invoice',
     ]);
   });
+
+  it('keeps backward compatibility for last_invoices', () => {
+    expect(parseFieldsString('id_contact,last_invoices')).toEqual([
+      'id_contact',
+      'last_invoices',
+    ]);
+  });
 });
