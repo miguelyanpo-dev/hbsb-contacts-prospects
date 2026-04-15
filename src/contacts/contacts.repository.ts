@@ -193,6 +193,7 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     db.query(
       `SELECT COUNT(*)::int AS total
        FROM public.contacts c
+       ${CITY_JOINS}
        WHERE ${where}`,
       params
     ),
