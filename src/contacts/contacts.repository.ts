@@ -204,25 +204,26 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     ),
     db.query(
       `SELECT
-         COUNT(*) FILTER (WHERE is_customer = true AND is_prospect = false)::int AS total_customers,
-         COUNT(*) FILTER (WHERE is_customer = true AND is_prospect = true)::int  AS total_prospects,
-         COUNT(*) FILTER (WHERE id_tag = 1)::int AS total_nuevos,
-         COUNT(*) FILTER (WHERE id_tag = 2)::int AS total_en_contacto,
-         COUNT(*) FILTER (WHERE id_tag = 3)::int AS total_pendiente,
-         COUNT(*) FILTER (WHERE id_tag = 4)::int AS total_con_exito,
-         COUNT(*) FILTER (WHERE id_tag = 5)::int AS total_fallido,
-         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND is_in_my_followups = true)::int AS total_seguimiento,
-         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND is_in_reassigned = true)::int AS total_reasignados,
-         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND is_excluded = true)::int AS total_excluidos,
-         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND is_blacklisted = true)::int AS total_lista_negra,
-         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND id_tag = 7)::int AS total_calientes,
-         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND id_tag = 8)::int AS total_tibios,
-         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND id_tag = 9)::int AS total_frios,
-         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND id_tag = 10)::int AS total_dormidos,
-         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND id_tag = 11)::int AS total_perdidos,
-         COUNT(*) FILTER (WHERE is_prospect = false AND is_customer = true AND id_tag = 12)::int AS total_mas_antiguos
-       FROM public.contacts
-       WHERE deleted_at IS NULL`
+         COUNT(*) FILTER (WHERE c.is_customer = true AND c.is_prospect = false)::int AS total_customers,
+         COUNT(*) FILTER (WHERE c.is_customer = true AND c.is_prospect = true)::int  AS total_prospects,
+         COUNT(*) FILTER (WHERE c.id_tag = 1)::int AS total_nuevos,
+         COUNT(*) FILTER (WHERE c.id_tag = 2)::int AS total_en_contacto,
+         COUNT(*) FILTER (WHERE c.id_tag = 3)::int AS total_pendiente,
+         COUNT(*) FILTER (WHERE c.id_tag = 4)::int AS total_con_exito,
+         COUNT(*) FILTER (WHERE c.id_tag = 5)::int AS total_fallido,
+         COUNT(*) FILTER (WHERE c.is_prospect = false AND c.is_customer = true AND c.is_in_my_followups = true)::int AS total_seguimiento,
+         COUNT(*) FILTER (WHERE c.is_prospect = false AND c.is_customer = true AND c.is_in_reassigned = true)::int AS total_reasignados,
+         COUNT(*) FILTER (WHERE c.is_prospect = false AND c.is_customer = true AND c.is_excluded = true)::int AS total_excluidos,
+         COUNT(*) FILTER (WHERE c.is_prospect = false AND c.is_customer = true AND c.is_blacklisted = true)::int AS total_lista_negra,
+         COUNT(*) FILTER (WHERE c.is_prospect = false AND c.is_customer = true AND c.id_tag = 7)::int AS total_calientes,
+         COUNT(*) FILTER (WHERE c.is_prospect = false AND c.is_customer = true AND c.id_tag = 8)::int AS total_tibios,
+         COUNT(*) FILTER (WHERE c.is_prospect = false AND c.is_customer = true AND c.id_tag = 9)::int AS total_frios,
+         COUNT(*) FILTER (WHERE c.is_prospect = false AND c.is_customer = true AND c.id_tag = 10)::int AS total_dormidos,
+         COUNT(*) FILTER (WHERE c.is_prospect = false AND c.is_customer = true AND c.id_tag = 11)::int AS total_perdidos,
+         COUNT(*) FILTER (WHERE c.is_prospect = false AND c.is_customer = true AND c.id_tag = 12)::int AS total_mas_antiguos
+       FROM public.contacts c
+       ${CITY_JOINS}
+       WHERE ${where}`
     ),
   ]);
   const total: number = countResult.rows[0]?.total ?? 0;
