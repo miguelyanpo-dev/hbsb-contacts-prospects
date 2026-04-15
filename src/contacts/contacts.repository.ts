@@ -223,7 +223,8 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
          COUNT(*) FILTER (WHERE c.is_prospect = false AND c.is_customer = true AND c.id_tag = 12)::int AS total_mas_antiguos
        FROM public.contacts c
        ${CITY_JOINS}
-       WHERE ${where}`
+       WHERE ${where}`,
+      params
     ),
   ]);
   const total: number = countResult.rows[0]?.total ?? 0;
