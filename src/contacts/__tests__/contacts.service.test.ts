@@ -52,6 +52,11 @@ describe('parseFiltersString', () => {
     expect(result.id_seller).toBe('550e8400-e29b-41d4-a716-446655440000');
   });
 
+  it('parses iso_code as string', () => {
+    const result = parseFiltersString('iso_code:CO');
+    expect(result.iso_code).toBe('CO');
+  });
+
   it('ignores unknown keys silently', () => {
     const result = parseFiltersString('unknown_key:value');
     expect(result).toEqual({});

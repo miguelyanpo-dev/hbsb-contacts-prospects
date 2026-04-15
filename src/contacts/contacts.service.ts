@@ -55,6 +55,8 @@ export function parseFiltersString(
       if (!isNaN(parsed)) result.id_city = parsed;
     } else if (key === 'id_seller') {
       result.id_seller = value;
+    } else if (key === 'iso_code') {
+      result.iso_code = value;
     } else if (key === 'search') {
       result.search = value;
     } else if (key === 'contact_name') {
@@ -100,6 +102,7 @@ export async function listContacts(db: Pool, rawQuery: ContactQueryRaw) {
   if (rawQuery.identification) filtersBase.identification = rawQuery.identification;
   if (rawQuery.phone_mobile)   filtersBase.phone_mobile   = rawQuery.phone_mobile;
   if (rawQuery.email)          filtersBase.email          = rawQuery.email;
+  if (rawQuery.iso_code)       filtersBase.iso_code       = rawQuery.iso_code;
 
   const fields = parseFieldsString(rawQuery.fields);
   const page = rawQuery.page !== undefined ? Math.max(1, parseInt(rawQuery.page, 10)) : 1;

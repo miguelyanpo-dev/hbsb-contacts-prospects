@@ -80,6 +80,7 @@ export const FIELD_MAP: Record<string, string> = {
   id_city:            'c.id_city',
   city_name:          'ci.city_name',
   region_name:        'r.region_name',
+  iso_code:           'r.iso_code',
   tag_name:           't.tag_name',
   // Notes LATERAL fields — resolved via conditional LATERAL JOIN below
   quantity_notes:     'COALESCE(ln.quantity_notes, 0)',
@@ -149,6 +150,11 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
   if (filters.id_city !== undefined) {
     conditions.push(`c.id_city = $${idx++}`);
     params.push(filters.id_city);
+  }
+
+  if (filters.iso_code) {
+    conditions.push(`r.iso_code = $${idx++}`);
+    params.push(filters.iso_code);
   }
 
   if (filters.search) {
