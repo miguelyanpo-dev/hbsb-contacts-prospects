@@ -66,6 +66,19 @@ const CITY_JOINS = `
   LEFT JOIN public.regions r ON r.id_region = ci.id_region
 `;
 
+/** Totales globales (solo no eliminados), sin filtros de la petición. */
+const GLOBAL_TOTALS_SELECT = `
+  SELECT
+    COUNT(*) FILTER (WHERE c.is_customer = true AND c.is_prospect = false)::int AS total_customers_all,
+    COUNT(*) FILTER (WHERE c.is_customer = true AND c.is_prospect = true)::int  AS total_prospects_all,
+    COUNT(*) FILTER (WHERE c.is_prospect = false AND c.is_customer = true AND c.is_in_my_followups = true)::int AS total_seguimiento_all,
+    COUNT(*) FILTER (WHERE c.is_prospect = false AND c.is_customer = true AND c.is_in_reassigned = true)::int AS total_reasignados_all,
+    COUNT(*) FILTER (WHERE c.is_prospect = false AND c.is_customer = true AND c.is_excluded = true)::int AS total_excluidos_all,
+    COUNT(*) FILTER (WHERE c.is_prospect = false AND c.is_customer = true AND c.is_blacklisted = true)::int AS total_lista_negra_all
+  FROM public.contacts c
+  WHERE c.deleted_at IS NULL
+`;
+
 // ─── Field whitelist for dynamic SELECT ───────────────────────────────────────
 // Keys = query param names. Values = SQL expressions (code constants, never user input).
 
@@ -199,7 +212,7 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
   const where = conditions.join(' AND ');
   const offset = (filters.page - 1) * filters.limit;
 
-  const [countResult, totalsResult] = await Promise.all([
+  const [countResult, totalsResult, globalTotalsResult] = await Promise.all([
     db.query(
       `SELECT COUNT(*)::int AS total
        FROM public.contacts c
@@ -231,6 +244,7 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
        WHERE ${where}`,
       params
     ),
+    db.query(GLOBAL_TOTALS_SELECT),
   ]);
   const total: number = countResult.rows[0]?.total ?? 0;
   const total_customers: number    = totalsResult.rows[0]?.total_customers ?? 0;
@@ -244,6 +258,18 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
   const total_reasignados: number  = totalsResult.rows[0]?.total_reasignados ?? 0;
   const total_excluidos: number    = totalsResult.rows[0]?.total_excluidos ?? 0;
   const total_lista_negra: number  = totalsResult.rows[0]?.total_lista_negra ?? 0;
+  const total_customers_all: number =
+    globalTotalsResult.rows[0]?.total_customers_all ?? 0;
+  const total_prospects_all: number =
+    globalTotalsResult.rows[0]?.total_prospects_all ?? 0;
+  const total_seguimiento_all: number =
+    globalTotalsResult.rows[0]?.total_seguimiento_all ?? 0;
+  const total_reasignados_all: number =
+    globalTotalsResult.rows[0]?.total_reasignados_all ?? 0;
+  const total_excluidos_all: number =
+    globalTotalsResult.rows[0]?.total_excluidos_all ?? 0;
+  const total_lista_negra_all: number =
+    globalTotalsResult.rows[0]?.total_lista_negra_all ?? 0;
   const total_calientes: number    = totalsResult.rows[0]?.total_calientes ?? 0;
   const total_tibios: number       = totalsResult.rows[0]?.total_tibios ?? 0;
   const total_frios: number        = totalsResult.rows[0]?.total_frios ?? 0;
@@ -340,6 +366,12 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     total_reasignados,
     total_excluidos,
     total_lista_negra,
+    total_customers_all,
+    total_prospects_all,
+    total_seguimiento_all,
+    total_reasignados_all,
+    total_excluidos_all,
+    total_lista_negra_all,
     total_calientes,
     total_tibios,
     total_frios,
