@@ -53,6 +53,9 @@ export function parseFiltersString(
     } else if (key === 'id_city') {
       const parsed = parseInt(value, 10);
       if (!isNaN(parsed)) result.id_city = parsed;
+    } else if (key === 'id_tag') {
+      const parsed = parseInt(value, 10);
+      if (!isNaN(parsed)) result.id_tag = parsed;
     } else if (key === 'id_seller') {
       result.id_seller = value;
     } else if (key === 'iso_code') {
@@ -105,6 +108,10 @@ export async function listContacts(db: Pool, rawQuery: ContactQueryRaw) {
   if (rawQuery.id_city !== undefined) {
     const parsedCityId = parseInt(rawQuery.id_city, 10);
     if (!isNaN(parsedCityId)) filtersBase.id_city = parsedCityId;
+  }
+  if (rawQuery.id_tag !== undefined) {
+    const parsedTagId = parseInt(rawQuery.id_tag, 10);
+    if (!isNaN(parsedTagId)) filtersBase.id_tag = parsedTagId;
   }
   if (rawQuery.iso_code)       filtersBase.iso_code       = rawQuery.iso_code;
 

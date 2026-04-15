@@ -83,6 +83,7 @@ export const ContactQuerySchema = z.object({
   page:           z.string().regex(/^\d+$/, 'page debe ser un entero').optional(),
   limit:          z.string().regex(/^\d+$/, 'limit debe ser un entero').optional(),
   id_city:        z.union([z.string().regex(/^\d+$/, 'id_city debe ser un entero'), z.literal('')]).optional().openapi({ description: 'Filtrar por id de ciudad (vacío para no filtrar)' }),
+  id_tag:         z.union([z.string().regex(/^\d+$/, 'id_tag debe ser un entero'), z.literal('')]).optional().openapi({ description: 'Filtrar por id de etiqueta (vacío para no filtrar)' }),
   iso_code:       z.string().optional().openapi({ description: 'Filtrar por código ISO de la región' }),
   contact_name:   z.string().optional().openapi({ description: 'Filtrar por nombre del contacto (búsqueda parcial, case-insensitive)' }),
   identification: z.string().optional().openapi({ description: 'Filtrar por identificación (búsqueda parcial, case-insensitive)' }),
@@ -108,6 +109,7 @@ export interface ContactFilters {
   email?: string;
   id_seller?: string;
   id_city?: number;
+  id_tag?: number;
   iso_code?: string;
   fields?: string[];
   page: number;

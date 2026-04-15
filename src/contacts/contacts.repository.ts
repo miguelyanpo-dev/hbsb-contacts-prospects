@@ -152,6 +152,11 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     params.push(filters.id_city);
   }
 
+  if (filters.id_tag !== undefined) {
+    conditions.push(`c.id_tag = $${idx++}`);
+    params.push(filters.id_tag);
+  }
+
   if (filters.iso_code) {
     conditions.push(`r.iso_code = $${idx++}`);
     params.push(filters.iso_code);

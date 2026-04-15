@@ -37,6 +37,11 @@ describe('parseFiltersString', () => {
     expect(result.id_city).toBe(42);
   });
 
+  it('parses id_tag as integer', () => {
+    const result = parseFiltersString('id_tag:7');
+    expect(result.id_tag).toBe(7);
+  });
+
   it('ignores id_city when value is not a number', () => {
     const result = parseFiltersString('id_city:abc');
     expect(result.id_city).toBeUndefined();
