@@ -142,6 +142,11 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     params.push(filters.is_in_my_followups);
   }
 
+  if (filters.is_in_reassigned !== undefined) {
+    conditions.push(`c.is_in_reassigned = $${idx++}`);
+    params.push(filters.is_in_reassigned);
+  }
+
   if (filters.id_seller) {
     conditions.push(`c.id_seller = $${idx++}`);
     params.push(filters.id_seller);

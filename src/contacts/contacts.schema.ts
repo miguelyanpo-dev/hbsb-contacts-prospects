@@ -80,6 +80,10 @@ export const ContactQuerySchema = z.object({
   filters:        z.string().optional(),
   is_prospect:    z.enum(['true', 'false']).optional(),
   is_customer:    z.enum(['true', 'false']).optional(),
+  is_in_my_followups: z.enum(['true', 'false']).optional(),
+  is_in_reassigned: z.enum(['true', 'false']).optional(),
+  is_excluded:    z.enum(['true', 'false']).optional(),
+  is_blacklisted: z.enum(['true', 'false']).optional(),
   page:           z.string().regex(/^\d+$/, 'page debe ser un entero').optional(),
   limit:          z.string().regex(/^\d+$/, 'limit debe ser un entero').optional(),
   id_city:        z.union([z.string().regex(/^\d+$/, 'id_city debe ser un entero'), z.literal('')]).optional().openapi({ description: 'Filtrar por id de ciudad (vacío para no filtrar)' }),
@@ -102,6 +106,7 @@ export interface ContactFilters {
   is_blacklisted?: boolean;
   is_excluded?: boolean;
   is_in_my_followups?: boolean;
+  is_in_reassigned?: boolean;
   search?: string;
   contact_name?: string;
   identification?: string;

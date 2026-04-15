@@ -22,6 +22,7 @@ const BOOLEAN_FILTER_KEYS = new Set([
   'is_blacklisted',
   'is_excluded',
   'is_in_my_followups',
+  'is_in_reassigned',
 ]);
 
 // ─── Parse filters string into ContactFilters (without page/limit/fields) ─────
@@ -100,6 +101,18 @@ export async function listContacts(db: Pool, rawQuery: ContactQueryRaw) {
   }
   if (rawQuery.is_customer !== undefined) {
     filtersBase.is_customer = rawQuery.is_customer === 'true';
+  }
+  if (rawQuery.is_in_my_followups !== undefined) {
+    filtersBase.is_in_my_followups = rawQuery.is_in_my_followups === 'true';
+  }
+  if (rawQuery.is_in_reassigned !== undefined) {
+    filtersBase.is_in_reassigned = rawQuery.is_in_reassigned === 'true';
+  }
+  if (rawQuery.is_excluded !== undefined) {
+    filtersBase.is_excluded = rawQuery.is_excluded === 'true';
+  }
+  if (rawQuery.is_blacklisted !== undefined) {
+    filtersBase.is_blacklisted = rawQuery.is_blacklisted === 'true';
   }
   if (rawQuery.contact_name)   filtersBase.contact_name   = rawQuery.contact_name;
   if (rawQuery.identification) filtersBase.identification = rawQuery.identification;

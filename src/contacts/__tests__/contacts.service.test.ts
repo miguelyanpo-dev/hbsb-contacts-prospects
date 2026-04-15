@@ -20,6 +20,11 @@ describe('parseFiltersString', () => {
     expect(result.is_customer).toBe(false);
   });
 
+  it('parses is_in_reassigned boolean filter', () => {
+    const result = parseFiltersString('is_in_reassigned:true');
+    expect(result.is_in_reassigned).toBe(true);
+  });
+
   it('parses multiple filters', () => {
     const result = parseFiltersString('is_prospect:true,is_customer:false,is_supplier:true');
     expect(result.is_prospect).toBe(true);
