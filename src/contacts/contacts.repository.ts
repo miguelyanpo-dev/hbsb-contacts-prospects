@@ -313,6 +313,7 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     filters.fields?.some((f) => lastInvoiceFields.includes(f)) ?? false;
 
   // Última factura del contacto por invoices.date (más reciente primero). Sin facturas, last_invoice null.
+  // Vendedor: invoices.id_seller → sellers.id_contact → contacts (nombre del vendedor).
   const lastInvoiceJoin = wantsLastInvoice
     ? `LEFT JOIN LATERAL (
         SELECT jsonb_build_object(
@@ -323,9 +324,19 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
           'total_amount', i.total_amount,
           'payment_amount', i.payment_amount,
           'balance_amount', i.balance_amount,
-          'status', i.status
+          'status', i.status,
+          'seller', CASE
+            WHEN sc.id_contact IS NOT NULL THEN jsonb_build_object(
+              'id_contact', sc.id_contact,
+              'contact_name', sc.contact_name,
+              'contact_image', sc.contact_image
+            )
+            ELSE NULL
+          END
         ) AS last_invoice
         FROM public.invoices i
+        LEFT JOIN public.sellers sv ON sv.id_seller = i.id_seller AND sv.deleted_at IS NULL
+        LEFT JOIN public.contacts sc ON sc.id_contact = sv.id_contact AND sc.deleted_at IS NULL
         WHERE i.id_contact = c.id_contact AND i.deleted_at IS NULL
         ORDER BY i."date" DESC NULLS LAST, i.id_invoice DESC
         LIMIT 1
