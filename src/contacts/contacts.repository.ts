@@ -15,6 +15,8 @@ const LIST_SELECT = `
   c.email,
   c.address,
   c.id_city,
+  c.id_tag,
+  t.tag_name,
   ci.city_name,
   r.region_name,
   c.created_at,
@@ -45,6 +47,7 @@ const DETAIL_SELECT = `
   c.is_blacklisted,
   c.id_city,
   c.id_tag,
+  t.tag_name,
   ci.city_name,
   r.region_name,
   c.created_at,
@@ -59,6 +62,8 @@ const CITY_JOINS = `
   LEFT JOIN public.cities ci ON ci.id_city = c.id_city
   LEFT JOIN public.regions r ON r.id_region = ci.id_region
 `;
+
+const TAG_JOIN = `LEFT JOIN public.tags t ON t.id_tag = c.id_tag`;
 
 /** Totales globales (solo no eliminados), sin filtros de la petición. */
 const GLOBAL_TOTALS_SELECT = `
@@ -85,6 +90,7 @@ export const FIELD_MAP: Record<string, string> = {
   email:              'c.email',
   address:            'c.address',
   id_city:            'c.id_city',
+  id_tag:             'c.id_tag',
   city_name:          'ci.city_name',
   region_name:        'r.region_name',
   iso_code:           'r.iso_code',
@@ -292,9 +298,12 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
       ? filters.fields.map((f) => `${FIELD_MAP[f]} AS ${f}`).join(', ')
       : LIST_SELECT;
 
-  const tagJoin = filters.fields?.includes('tag_name')
-    ? 'LEFT JOIN public.tags t ON t.id_tag = c.id_tag'
-    : '';
+  const needsTagJoin =
+    !filters.fields ||
+    filters.fields.length === 0 ||
+    filters.fields.includes('tag_name') ||
+    filters.fields.includes('id_tag');
+  const tagJoin = needsTagJoin ? TAG_JOIN : '';
 
   // LATERAL JOIN for notes-related fields: quantity_notes, title, tab_name.
   // COUNT(*) OVER() is evaluated before LIMIT, giving the total note count
@@ -409,6 +418,7 @@ export async function findContactById(db: Pool, id: string) {
     `SELECT ${DETAIL_SELECT}
      FROM public.contacts c
      ${CITY_JOINS}
+     ${TAG_JOIN}
      WHERE c.id_contact = $1 AND c.deleted_at IS NULL`,
     [id]
   );

@@ -136,6 +136,14 @@ describe('parseFieldsString', () => {
     ]);
   });
 
+  it('allows id_tag and tag_name field names', () => {
+    expect(parseFieldsString('id_contact,id_tag,tag_name')).toEqual([
+      'id_contact',
+      'id_tag',
+      'tag_name',
+    ]);
+  });
+
   it('allows invoices-backed field last_invoice', () => {
     expect(parseFieldsString('id_contact,last_invoice')).toEqual([
       'id_contact',
