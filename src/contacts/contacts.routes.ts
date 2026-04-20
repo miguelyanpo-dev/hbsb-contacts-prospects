@@ -19,6 +19,7 @@ import {
   updateExistingContact,
   deleteContact,
 } from './contacts.service';
+import { jsonSafe } from '../utils/jsonSerialize';
 
 // Handler return type cast needed due to @hono/zod-openapi v1.x / zod v4 inference limitations
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -63,7 +64,7 @@ contacts.openapi(listContactsRoute, (async (c) => {
   try {
     const query = c.req.valid('query');
     const result = await listContacts(db, query);
-    return c.json(result, 200);
+    return c.json(jsonSafe(result) as typeof result, 200);
   } catch (err) {
     console.error('[GET /contacts]', err);
     return c.json({ success: false, error: 'Error interno del servidor' }, 500);
@@ -109,7 +110,7 @@ contacts.openapi(getContactRoute, (async (c) => {
   try {
     const { id } = c.req.valid('param');
     const contact = await getContact(db, id);
-    return c.json({ success: true, data: contact }, 200);
+    return c.json({ success: true, data: jsonSafe(contact) as typeof contact }, 200);
   } catch (err) {
     if (err instanceof NotFoundError) {
       return c.json({ success: false, error: err.message }, 404);
@@ -157,7 +158,7 @@ contacts.openapi(createContactRoute, (async (c) => {
   try {
     const body = c.req.valid('json');
     const contact = await createNewContact(db, body);
-    return c.json({ success: true, data: contact }, 201);
+    return c.json({ success: true, data: jsonSafe(contact) as typeof contact }, 201);
   } catch (err) {
     console.error('[POST /contacts]', err);
     return c.json({ success: false, error: 'Error interno del servidor' }, 500);
@@ -208,7 +209,7 @@ contacts.openapi(updateContactRoute, (async (c) => {
     const { id } = c.req.valid('param');
     const body = c.req.valid('json');
     const contact = await updateExistingContact(db, id, body);
-    return c.json({ success: true, data: contact }, 200);
+    return c.json({ success: true, data: jsonSafe(contact) as typeof contact }, 200);
   } catch (err) {
     if (err instanceof NotFoundError) {
       return c.json({ success: false, error: err.message }, 404);
