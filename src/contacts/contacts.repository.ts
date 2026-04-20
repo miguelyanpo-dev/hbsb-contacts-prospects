@@ -165,19 +165,18 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     params.push(filters.id_seller);
   }
 
-  // contacts.id_seller puede ser UUID (= sellers.id_seller) o entero (= sellers.id_contact).
-  // Evita comparar tipos incompatibles en SQL (causaba 500 en producción).
+  // Vendedor por sellers.id_contact (entero): enlazar vía facturas, igual que last_invoice.
+  // No usa contacts.id_seller (puede no existir o no estar poblado en todos los tenants).
   if (filters.seller_id_contact !== undefined) {
-    const p = idx++;
     conditions.push(
-      `c.id_seller IS NOT NULL
-       AND c.id_seller::text IN (
-         SELECT sv.id_seller::text FROM public.sellers sv
-         WHERE sv.id_contact = $${p} AND sv.deleted_at IS NULL
-         UNION
-         SELECT sv.id_contact::text FROM public.sellers sv
-         WHERE sv.id_contact = $${p} AND sv.deleted_at IS NULL
-       )`
+      `EXISTS (
+        SELECT 1
+        FROM public.invoices i
+        INNER JOIN public.sellers sv ON sv.id_seller = i.id_seller AND sv.deleted_at IS NULL
+        WHERE i.id_contact = c.id_contact
+          AND i.deleted_at IS NULL
+          AND sv.id_contact = $${idx++}
+      )`
     );
     params.push(filters.seller_id_contact);
   }
