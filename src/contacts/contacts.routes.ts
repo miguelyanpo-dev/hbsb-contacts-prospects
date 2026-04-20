@@ -76,7 +76,7 @@ const getContactRoute = createRoute({
   method: 'get',
   path: '/contacts/{id}',
   tags: ['Contacts'],
-  summary: 'Obtener un contacto por ID',
+  summary: 'Obtener un contacto por id_contact',
   request: {
     params: ContactParamSchema,
     query: RefQuerySchema,

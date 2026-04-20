@@ -1,9 +1,12 @@
 import { z } from 'zod';
 
+/** PK `public.contacts.id_contact` (serial / entero) en JSON y validación. */
+export const IdContactSchema = z.coerce.number().int().nonnegative();
+
 // ─── Contact list item (simplified + city/region join) ────────────────────────
 
 export const ContactListItemSchema = z.object({
-  id_contact: z.string().uuid(),
+  id_contact: IdContactSchema,
   identification: z.string().nullable(),
   company_name: z.string().nullable(),
   contact_name: z.string().nullable(),
@@ -24,7 +27,7 @@ export type ContactListItem = z.infer<typeof ContactListItemSchema>;
 // ─── Contact full detail schema (includes all fields + city/region) ────────────
 
 export const ContactSchema = z.object({
-  id_contact: z.string().uuid(),
+  id_contact: IdContactSchema,
   identification: z.string().nullable(),
   company_name: z.string().nullable(),
   contact_name: z.string().nullable(),
@@ -63,7 +66,13 @@ export type Contact = z.infer<typeof ContactSchema>;
 // ─── Route param schema ────────────────────────────────────────────────────────
 
 export const ContactParamSchema = z.object({
-  id: z.string().uuid('El ID del contacto debe ser un UUID válido'),
+  id: z
+    .string()
+    .regex(/^\d+$/, 'El id debe ser id_contact: entero positivo (sin UUID)')
+    .openapi({
+      description: 'PK public.contacts.id_contact (autoincremental)',
+      example: '1891',
+    }),
 });
 
 // ─── Shared ref schema (multi-tenant DB resolver) ─────────────────────────────

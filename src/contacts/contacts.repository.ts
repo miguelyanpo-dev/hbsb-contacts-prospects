@@ -472,7 +472,7 @@ export async function createContact(db: Pool, data: ContactCreate) {
     params
   );
 
-  const newId: string = inserted.rows[0].id_contact;
+  const newId = String(inserted.rows[0].id_contact);
   return findContactById(db, newId);
 }
 
