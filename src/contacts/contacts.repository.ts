@@ -165,6 +165,18 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     params.push(filters.id_seller);
   }
 
+  if (filters.seller_id_contact !== undefined) {
+    conditions.push(
+      `EXISTS (
+        SELECT 1 FROM public.sellers sv
+        WHERE sv.id_seller = c.id_seller
+          AND sv.deleted_at IS NULL
+          AND sv.id_contact = $${idx++}
+      )`
+    );
+    params.push(filters.seller_id_contact);
+  }
+
   if (filters.id_city !== undefined) {
     conditions.push(`c.id_city = $${idx++}`);
     params.push(filters.id_city);

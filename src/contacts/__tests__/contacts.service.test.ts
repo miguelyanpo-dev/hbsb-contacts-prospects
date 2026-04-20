@@ -62,6 +62,26 @@ describe('parseFiltersString', () => {
     expect(result.id_seller).toBe('550e8400-e29b-41d4-a716-446655440000');
   });
 
+  it('parses seller_id_contact as integer', () => {
+    const result = parseFiltersString('seller_id_contact:42');
+    expect(result.seller_id_contact).toBe(42);
+  });
+
+  it('parses seller JSON with numeric id_contact', () => {
+    const result = parseFiltersString('seller:{"id_contact":7}');
+    expect(result.seller_id_contact).toBe(7);
+  });
+
+  it('parses seller JSON with string id_contact digits', () => {
+    const result = parseFiltersString('seller:{"id_contact":"12"}');
+    expect(result.seller_id_contact).toBe(12);
+  });
+
+  it('ignores seller when JSON is invalid', () => {
+    const result = parseFiltersString('seller:not-json');
+    expect(result.seller_id_contact).toBeUndefined();
+  });
+
   it('parses iso_code as string', () => {
     const result = parseFiltersString('iso_code:CO');
     expect(result.iso_code).toBe('CO');

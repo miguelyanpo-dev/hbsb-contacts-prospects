@@ -89,6 +89,8 @@ export const ContactQuerySchema = z.object({
   id_city:        z.union([z.string().regex(/^\d+$/, 'id_city debe ser un entero'), z.literal('')]).optional().openapi({ description: 'Filtrar por id de ciudad (vacío para no filtrar)' }),
   id_tag:         z.union([z.string().regex(/^\d+$/, 'id_tag debe ser un entero'), z.literal('')]).optional().openapi({ description: 'Filtrar por id de etiqueta (vacío para no filtrar)' }),
   iso_code:       z.string().optional().openapi({ description: 'Filtrar por código ISO de la región' }),
+  seller:         z.string().optional().openapi({ description: 'JSON: {"id_contact": número} — vendedor en public.sellers (id_contact entero)' }),
+  seller_id_contact: z.union([z.string().regex(/^\d+$/, 'seller_id_contact debe ser un entero'), z.literal('')]).optional().openapi({ description: 'Filtrar por sellers.id_contact (entero)' }),
   contact_name:   z.string().optional().openapi({ description: 'Filtrar por nombre del contacto (búsqueda parcial, case-insensitive)' }),
   identification: z.string().optional().openapi({ description: 'Filtrar por identificación (búsqueda parcial, case-insensitive)' }),
   phone_mobile:   z.string().optional().openapi({ description: 'Filtrar por teléfono móvil (búsqueda parcial, case-insensitive)' }),
@@ -113,6 +115,8 @@ export interface ContactFilters {
   phone_mobile?: string;
   email?: string;
   id_seller?: string;
+  /** `public.sellers.id_contact` (entero autoincremental), no el UUID del contacto cliente. */
+  seller_id_contact?: number;
   id_city?: number;
   id_tag?: number;
   iso_code?: string;

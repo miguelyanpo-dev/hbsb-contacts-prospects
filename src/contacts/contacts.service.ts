@@ -59,6 +59,23 @@ export function parseFiltersString(
       if (!isNaN(parsed)) result.id_tag = parsed;
     } else if (key === 'id_seller') {
       result.id_seller = value;
+    } else if (key === 'seller_id_contact') {
+      const parsed = parseInt(value, 10);
+      if (!isNaN(parsed)) result.seller_id_contact = parsed;
+    } else if (key === 'seller') {
+      try {
+        const obj = JSON.parse(value) as unknown;
+        if (obj !== null && typeof obj === 'object' && 'id_contact' in obj) {
+          const v = (obj as { id_contact: unknown }).id_contact;
+          if (typeof v === 'number' && Number.isInteger(v)) {
+            result.seller_id_contact = v;
+          } else if (typeof v === 'string' && /^\d+$/.test(v)) {
+            result.seller_id_contact = parseInt(v, 10);
+          }
+        }
+      } catch {
+        /* invalid JSON ignored */
+      }
     } else if (key === 'iso_code') {
       result.iso_code = value;
     } else if (key === 'search') {
@@ -127,6 +144,30 @@ export async function listContacts(db: Pool, rawQuery: ContactQueryRaw) {
     if (!isNaN(parsedTagId)) filtersBase.id_tag = parsedTagId;
   }
   if (rawQuery.iso_code)       filtersBase.iso_code       = rawQuery.iso_code;
+
+  if (rawQuery.seller) {
+    try {
+      const obj = JSON.parse(rawQuery.seller) as unknown;
+      if (
+        obj !== null &&
+        typeof obj === 'object' &&
+        'id_contact' in obj
+      ) {
+        const v = (obj as { id_contact: unknown }).id_contact;
+        if (typeof v === 'number' && Number.isInteger(v)) {
+          filtersBase.seller_id_contact = v;
+        } else if (typeof v === 'string' && /^\d+$/.test(v)) {
+          filtersBase.seller_id_contact = parseInt(v, 10);
+        }
+      }
+    } catch {
+      /* invalid JSON ignored */
+    }
+  }
+  if (rawQuery.seller_id_contact !== undefined && rawQuery.seller_id_contact !== '') {
+    const parsed = parseInt(rawQuery.seller_id_contact, 10);
+    if (!isNaN(parsed)) filtersBase.seller_id_contact = parsed;
+  }
 
   const fields = parseFieldsString(rawQuery.fields);
   const page = rawQuery.page !== undefined ? Math.max(1, parseInt(rawQuery.page, 10)) : 1;
