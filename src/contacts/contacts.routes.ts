@@ -187,7 +187,7 @@ const updateContactRoute = createRoute({
     },
     400: {
       content: { 'application/json': { schema: ErrorResponse } },
-      description: 'Datos inválidos o ref requerido',
+      description: 'Datos inválidos, ref requerido o JSON del body mal formado (p. ej. coma final ilegal)',
     },
     404: {
       content: { 'application/json': { schema: ErrorResponse } },

@@ -456,6 +456,7 @@ export async function createContact(db: Pool, data: ContactCreate) {
     ['id_status_employee', data.id_status_employee],
     ['id_status_seller', data.id_status_seller],
     ['id_city', data.id_city],
+    ['id_tag', data.id_tag],
     ['created_by_user_id', data.created_by_user_id],
   ];
 
@@ -509,6 +510,7 @@ export async function updateContact(db: Pool, id: string, data: ContactUpdate) {
     ['id_status_employee', data.id_status_employee],
     ['id_status_seller', data.id_status_seller],
     ['id_city', data.id_city],
+    ['id_tag', data.id_tag],
     ['updated_by_user_id', data.updated_by_user_id],
   ];
 

@@ -165,6 +165,7 @@ export const ContactCreateSchema = z.object({
   id_status_employee: z.string().uuid().nullable().optional(),
   id_status_seller: z.string().uuid().nullable().optional(),
   id_city: z.number().int().nullable().optional(),
+  id_tag: z.number().int().nullable().optional(),
   created_by_user_id: z.string().uuid().optional(),
 });
 
@@ -196,6 +197,7 @@ export const ContactUpdateSchema = z.object({
   id_status_employee: z.string().uuid().nullable().optional(),
   id_status_seller: z.string().uuid().nullable().optional(),
   id_city: z.number().int().nullable().optional(),
+  id_tag: z.number().int().nullable().optional(),
   updated_by_user_id: z.string().uuid().optional(),
 });
 

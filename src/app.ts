@@ -60,10 +60,28 @@ app.notFound((c) => {
 // Error handler
 app.onError((err, c) => {
   console.error('Unhandled error:', err);
-  return c.json({ 
+  const msg = err.message ?? '';
+
+  // JSON estricto (RFC 8259): sin coma después del último campo; Swagger a veces envía `{"a":1,}`.
+  if (
+    err instanceof SyntaxError ||
+    /Malformed JSON|Unexpected token|JSON Parse error/i.test(msg)
+  ) {
+    return c.json(
+      {
+        success: false,
+        error: 'Bad Request',
+        message:
+          'JSON del body inválido. Suele deberse a una coma final tras el último campo; quítala. Ejemplo válido: {"id_tag":3}',
+      },
+      400
+    );
+  }
+
+  return c.json({
     success: false,
-    error: 'Internal Server Error', 
-    message: err.message 
+    error: 'Internal Server Error',
+    message: msg,
   }, 500);
 });
 
