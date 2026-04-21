@@ -19,6 +19,7 @@ const LIST_SELECT = `
   t.tag_name,
   ci.city_name,
   r.region_name,
+  li.last_invoice,
   c.created_at,
   c.created_by_user_id,
   c.updated_at,
@@ -64,6 +65,33 @@ const CITY_JOINS = `
 `;
 
 const TAG_JOIN = `LEFT JOIN public.tags t ON t.id_tag = c.id_tag`;
+
+const LAST_INVOICE_JOIN = `LEFT JOIN LATERAL (
+  SELECT jsonb_build_object(
+    'id_invoice', i.id_invoice,
+    'date', i."date",
+    'due_date', i.due_date,
+    'consecutive', i.consecutive,
+    'total_amount', i.total_amount,
+    'payment_amount', i.payment_amount,
+    'balance_amount', i.balance_amount,
+    'status', i.status,
+    'seller', CASE
+      WHEN sc.id_contact IS NOT NULL THEN jsonb_build_object(
+        'id_contact', sc.id_contact,
+        'contact_name', sc.contact_name,
+        'contact_image', sc.contact_image
+      )
+      ELSE NULL
+    END
+  ) AS last_invoice
+  FROM public.invoices i
+  LEFT JOIN public.sellers sv ON sv.id_seller = i.id_seller AND sv.deleted_at IS NULL
+  LEFT JOIN public.contacts sc ON sc.id_contact = sv.id_contact AND sc.deleted_at IS NULL
+  WHERE i.id_contact = c.id_contact AND i.deleted_at IS NULL
+  ORDER BY i."date" DESC NULLS LAST, i.id_invoice DESC
+  LIMIT 1
+) li ON true`;
 
 /** Totales globales (solo no eliminados), sin filtros de la petición. */
 const GLOBAL_TOTALS_SELECT = `
@@ -332,35 +360,7 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     filters.fields?.some((f) => lastInvoiceFields.includes(f)) ?? false;
 
   // Última factura del contacto por invoices.date (más reciente primero). Sin facturas, last_invoice null.
-  // Vendedor: invoices.id_seller → sellers.id_contact → contacts (nombre del vendedor).
-  const lastInvoiceJoin = wantsLastInvoice
-    ? `LEFT JOIN LATERAL (
-        SELECT jsonb_build_object(
-          'id_invoice', i.id_invoice,
-          'date', i."date",
-          'due_date', i.due_date,
-          'consecutive', i.consecutive,
-          'total_amount', i.total_amount,
-          'payment_amount', i.payment_amount,
-          'balance_amount', i.balance_amount,
-          'status', i.status,
-          'seller', CASE
-            WHEN sc.id_contact IS NOT NULL THEN jsonb_build_object(
-              'id_contact', sc.id_contact,
-              'contact_name', sc.contact_name,
-              'contact_image', sc.contact_image
-            )
-            ELSE NULL
-          END
-        ) AS last_invoice
-        FROM public.invoices i
-        LEFT JOIN public.sellers sv ON sv.id_seller = i.id_seller AND sv.deleted_at IS NULL
-        LEFT JOIN public.contacts sc ON sc.id_contact = sv.id_contact AND sc.deleted_at IS NULL
-        WHERE i.id_contact = c.id_contact AND i.deleted_at IS NULL
-        ORDER BY i."date" DESC NULLS LAST, i.id_invoice DESC
-        LIMIT 1
-      ) li ON true`
-    : '';
+  const lastInvoiceJoin = wantsLastInvoice ? LAST_INVOICE_JOIN : '';
 
   // Con last_invoice: del día actual hacia atrás según date de la última factura; sin facturas al final.
   const orderByClause = wantsLastInvoice
@@ -419,6 +419,7 @@ export async function findContactById(db: Pool, id: string) {
      FROM public.contacts c
      ${CITY_JOINS}
      ${TAG_JOIN}
+     ${LAST_INVOICE_JOIN}
      WHERE c.id_contact = $1 AND c.deleted_at IS NULL`,
     [id]
   );

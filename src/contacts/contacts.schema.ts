@@ -16,6 +16,7 @@ export const ContactListItemSchema = z.object({
   id_city: z.number().int().nullable(),
   id_tag: z.number().int().nullable(),
   tag_name: z.string().nullable(),
+  last_invoice: z.unknown().nullable(),
   city_name: z.string().nullable(),
   region_name: z.string().nullable(),
   created_at: z.string().nullable(),
