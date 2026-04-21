@@ -20,6 +20,9 @@ const LIST_SELECT = `
   ci.city_name,
   r.region_name,
   li.last_invoice,
+  ai.total_invoices,
+  ai.total_amount_all_invoices,
+  ai.payment_amount_all_invoices,
   c.created_at,
   c.created_by_user_id,
   c.updated_at,
@@ -93,6 +96,15 @@ const LAST_INVOICE_JOIN = `LEFT JOIN LATERAL (
   ORDER BY i."date" DESC NULLS LAST, i.id_invoice DESC
   LIMIT 1
 ) li ON true`;
+
+const INVOICES_AGG_JOIN = `LEFT JOIN LATERAL (
+  SELECT
+    COUNT(*)::int AS total_invoices,
+    COALESCE(SUM(i.total_amount), 0) AS total_amount_all_invoices,
+    COALESCE(SUM(i.payment_amount), 0) AS payment_amount_all_invoices
+  FROM public.invoices i
+  WHERE i.id_contact = c.id_contact AND i.deleted_at IS NULL
+) ai ON true`;
 
 /** Totales globales (solo no eliminados), sin filtros de la petición. */
 const GLOBAL_TOTALS_SELECT = `
@@ -421,6 +433,7 @@ export async function findContactById(db: Pool, id: string) {
      ${CITY_JOINS}
      ${TAG_JOIN}
      ${LAST_INVOICE_JOIN}
+     ${INVOICES_AGG_JOIN}
      WHERE c.id_contact = $1 AND c.deleted_at IS NULL`,
     [id]
   );
