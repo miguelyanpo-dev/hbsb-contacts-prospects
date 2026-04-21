@@ -51,6 +51,7 @@ const DETAIL_SELECT = `
   t.tag_name,
   ci.city_name,
   r.region_name,
+  li.last_invoice,
   c.created_at,
   c.created_by_user_id,
   c.updated_at,
