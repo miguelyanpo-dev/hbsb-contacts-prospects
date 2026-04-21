@@ -18,7 +18,7 @@ const LIST_SELECT = `
   c.id_tag,
   t.tag_name,
   ci.city_name,
-  r.region_name,
+  COALESCE(r.region_name, r_ci.region_name) AS region_name,
   li.last_invoice,
   ai.total_invoices,
   ai.total_amount_all_invoices,
@@ -55,7 +55,7 @@ const DETAIL_SELECT = `
   c.id_tag,
   t.tag_name,
   ci.city_name,
-  r.region_name,
+  COALESCE(r.region_name, r_ci.region_name) AS region_name,
   li.last_invoice,
   ai.total_invoices,
   ai.total_amount_all_invoices,
@@ -70,9 +70,11 @@ const DETAIL_SELECT = `
   c.deleted_by_user_id
 `;
 
+// Región: prioridad contacts.id_region; si no hay, la de la ciudad (cities.id_region).
 const CITY_JOINS = `
   LEFT JOIN public.cities ci ON ci.id_city = c.id_city
-  LEFT JOIN public.regions r ON r.id_region = ci.id_region
+  LEFT JOIN public.regions r ON r.id_region = c.id_region
+  LEFT JOIN public.regions r_ci ON r_ci.id_region = ci.id_region
 `;
 
 const TAG_JOIN = `LEFT JOIN public.tags t ON t.id_tag = c.id_tag`;
@@ -170,8 +172,8 @@ export const FIELD_MAP: Record<string, string> = {
   id_city:            'c.id_city',
   id_tag:             'c.id_tag',
   city_name:          'ci.city_name',
-  region_name:        'r.region_name',
-  iso_code:           'r.iso_code',
+  region_name:        'COALESCE(r.region_name, r_ci.region_name)',
+  iso_code:           'COALESCE(r.iso_code, r_ci.iso_code)',
   tag_name:           't.tag_name',
   // Notes LATERAL fields — resolved via conditional LATERAL JOIN below
   quantity_notes:     'COALESCE(ln.quantity_notes, 0)',
@@ -275,7 +277,7 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
   }
 
   if (filters.iso_code) {
-    conditions.push(`r.iso_code = $${idx++}`);
+    conditions.push(`COALESCE(r.iso_code, r_ci.iso_code) = $${idx++}`);
     params.push(filters.iso_code);
   }
 
