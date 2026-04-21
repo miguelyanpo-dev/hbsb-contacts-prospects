@@ -23,6 +23,8 @@ const LIST_SELECT = `
   ai.total_invoices,
   ai.total_amount_all_invoices,
   ai.payment_amount_all_invoices,
+  ai.balance_amount_overdue_invoices,
+  ai.balance_amount_not_overdue_invoices,
   c.created_at,
   c.created_by_user_id,
   c.updated_at,
@@ -58,6 +60,8 @@ const DETAIL_SELECT = `
   ai.total_invoices,
   ai.total_amount_all_invoices,
   ai.payment_amount_all_invoices,
+  ai.balance_amount_overdue_invoices,
+  ai.balance_amount_not_overdue_invoices,
   c.created_at,
   c.created_by_user_id,
   c.updated_at,
@@ -104,7 +108,15 @@ const INVOICES_AGG_JOIN = `LEFT JOIN LATERAL (
   SELECT
     COUNT(*)::int AS total_invoices,
     COALESCE(SUM(i.total_amount), 0) AS total_amount_all_invoices,
-    COALESCE(SUM(i.payment_amount), 0) AS payment_amount_all_invoices
+    COALESCE(SUM(i.payment_amount), 0) AS payment_amount_all_invoices,
+    -- Vencido: due_date (fecha calendario) estrictamente anterior a hoy en la zona horaria de la sesión PG.
+    COALESCE(SUM(i.balance_amount) FILTER (
+      WHERE i.due_date IS NOT NULL AND (i.due_date::date < CURRENT_DATE)
+    ), 0) AS balance_amount_overdue_invoices,
+    -- No vencido: hoy o futuro, o sin due_date (se suma aquí).
+    COALESCE(SUM(i.balance_amount) FILTER (
+      WHERE i.due_date IS NULL OR (i.due_date::date >= CURRENT_DATE)
+    ), 0) AS balance_amount_not_overdue_invoices
   FROM public.invoices i
   WHERE i.id_contact = c.id_contact AND i.deleted_at IS NULL
 ) ai ON true`;
@@ -146,6 +158,11 @@ export const FIELD_MAP: Record<string, string> = {
   last_invoice:       'li.last_invoice',
   // Backward compatibility for clients still requesting plural key.
   last_invoices:      'li.last_invoice',
+  total_invoices:                    'ai.total_invoices',
+  total_amount_all_invoices:         'ai.total_amount_all_invoices',
+  payment_amount_all_invoices:       'ai.payment_amount_all_invoices',
+  balance_amount_overdue_invoices:   'ai.balance_amount_overdue_invoices',
+  balance_amount_not_overdue_invoices: 'ai.balance_amount_not_overdue_invoices',
   created_at:         'c.created_at',
   created_by_user_id: 'c.created_by_user_id',
   updated_at:         'c.updated_at',
@@ -373,10 +390,27 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
 
   const lastInvoiceFields = ['last_invoice', 'last_invoices'];
   const wantsLastInvoice =
-    filters.fields?.some((f) => lastInvoiceFields.includes(f)) ?? false;
+    !filters.fields ||
+    filters.fields.length === 0 ||
+    filters.fields.some((f) => lastInvoiceFields.includes(f));
 
   // Última factura del contacto por invoices.date (más reciente primero). Sin facturas, last_invoice null.
   const lastInvoiceJoin = wantsLastInvoice ? LAST_INVOICE_JOIN : '';
+
+  const invoiceAggFieldNames = [
+    'total_invoices',
+    'total_amount_all_invoices',
+    'payment_amount_all_invoices',
+    'balance_amount_overdue_invoices',
+    'balance_amount_not_overdue_invoices',
+  ] as const;
+  const needsInvoicesAggJoin =
+    !filters.fields ||
+    filters.fields.length === 0 ||
+    filters.fields.some((f) =>
+      (invoiceAggFieldNames as readonly string[]).includes(f)
+    );
+  const invoicesAggJoin = needsInvoicesAggJoin ? INVOICES_AGG_JOIN : '';
 
   // Con last_invoice: del día actual hacia atrás según date de la última factura; sin facturas al final.
   const orderByClause = wantsLastInvoice
@@ -392,6 +426,7 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
      ${tagJoin}
      ${notesJoin}
      ${lastInvoiceJoin}
+     ${invoicesAggJoin}
      WHERE ${where}
      ORDER BY ${orderByClause}
      LIMIT $${idx++} OFFSET $${idx++}`,

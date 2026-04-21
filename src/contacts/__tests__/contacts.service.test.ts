@@ -144,6 +144,18 @@ describe('parseFieldsString', () => {
     ]);
   });
 
+  it('allows invoice aggregate field names', () => {
+    expect(
+      parseFieldsString(
+        'id_contact,balance_amount_overdue_invoices,balance_amount_not_overdue_invoices',
+      ),
+    ).toEqual([
+      'id_contact',
+      'balance_amount_overdue_invoices',
+      'balance_amount_not_overdue_invoices',
+    ]);
+  });
+
   it('allows invoices-backed field last_invoice', () => {
     expect(parseFieldsString('id_contact,last_invoice')).toEqual([
       'id_contact',
