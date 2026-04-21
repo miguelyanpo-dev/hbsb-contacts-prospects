@@ -109,12 +109,34 @@ const INVOICES_AGG_JOIN = `LEFT JOIN LATERAL (
     COUNT(*)::int AS total_invoices,
     COALESCE(SUM(i.total_amount), 0) AS total_amount_all_invoices,
     COALESCE(SUM(i.payment_amount), 0) AS payment_amount_all_invoices,
-    -- Vencido: due_date (fecha calendario) estrictamente anterior a hoy en la zona horaria de la sesión PG.
-    COALESCE(SUM(i.balance_amount) FILTER (
+    /*
+     * Saldo por línea para cartera vencida / no vencida:
+     * - Si balance_amount existe y es distinto de 0, se usa (valor en BD).
+     * - Si es NULL o 0, se usa max(0, total_amount - payment_amount) por si balance_amount no está poblado.
+     * Vencimiento: fecha calendario de due_date vs CURRENT_DATE (sesión PG).
+     */
+    COALESCE(SUM(
+      (CASE
+        WHEN i.balance_amount IS NOT NULL AND (i.balance_amount::numeric <> 0)
+          THEN i.balance_amount::numeric
+        ELSE GREATEST(
+          COALESCE(i.total_amount, 0)::numeric - COALESCE(i.payment_amount, 0)::numeric,
+          0::numeric
+        )
+      END)
+    ) FILTER (
       WHERE i.due_date IS NOT NULL AND (i.due_date::date < CURRENT_DATE)
     ), 0) AS balance_amount_overdue_invoices,
-    -- No vencido: hoy o futuro, o sin due_date (se suma aquí).
-    COALESCE(SUM(i.balance_amount) FILTER (
+    COALESCE(SUM(
+      (CASE
+        WHEN i.balance_amount IS NOT NULL AND (i.balance_amount::numeric <> 0)
+          THEN i.balance_amount::numeric
+        ELSE GREATEST(
+          COALESCE(i.total_amount, 0)::numeric - COALESCE(i.payment_amount, 0)::numeric,
+          0::numeric
+        )
+      END)
+    ) FILTER (
       WHERE i.due_date IS NULL OR (i.due_date::date >= CURRENT_DATE)
     ), 0) AS balance_amount_not_overdue_invoices
   FROM public.invoices i
