@@ -174,13 +174,7 @@ export async function listContacts(db: Pool, rawQuery: ContactQueryRaw) {
     if (!isNaN(parsed)) filtersBase.seller_id_contact = parsed;
   }
 
-  let fields = parseFieldsString(rawQuery.fields);
-  if (rawQuery.has_balance_amount_overdue_invoices === 'true' && fields.length > 0) {
-    const merged = new Set(fields);
-    merged.add('quantity_invoices_overdue');
-    merged.add('total_invoices_overdue');
-    fields = Array.from(merged).filter((f) => f in FIELD_MAP);
-  }
+  const fields = parseFieldsString(rawQuery.fields);
   const page = rawQuery.page !== undefined ? Math.max(1, parseInt(rawQuery.page, 10)) : 1;
   const limit =
     rawQuery.limit !== undefined ? Math.min(100, Math.max(1, parseInt(rawQuery.limit, 10))) : 20;
@@ -212,6 +206,8 @@ export async function listContacts(db: Pool, rawQuery: ContactQueryRaw) {
     total_dormidos,
     total_perdidos,
     total_mas_antiguos,
+    quantity_invoices_overdue,
+    total_invoices_overdue,
   } = await findAllContacts(db, filters);
   return {
     ...buildPaginatedResponse(rows, total, page, limit),
@@ -238,6 +234,8 @@ export async function listContacts(db: Pool, rawQuery: ContactQueryRaw) {
     total_dormidos,
     total_perdidos,
     total_mas_antiguos,
+    quantity_invoices_overdue,
+    total_invoices_overdue,
   };
 }
 

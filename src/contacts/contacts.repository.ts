@@ -31,12 +31,6 @@ const LIST_SELECT = `
   c.updated_by_user_id
 `;
 
-/** Sufijo de SELECT de listado cuando se filtra por facturas vencidas con saldo pendiente. */
-const LIST_SELECT_OVERDUE_INVOICE_COUNTS = `,
-  ai.quantity_invoices_overdue,
-  ai.total_invoices_overdue
-`;
-
 /**
  * Columns for the detail view: all contact fields + city/region via JOIN.
  */
@@ -68,8 +62,6 @@ const DETAIL_SELECT = `
   ai.payment_amount_all_invoices,
   ai.balance_amount_overdue_invoices,
   ai.balance_amount_not_overdue_invoices,
-  ai.quantity_invoices_overdue,
-  ai.total_invoices_overdue,
   c.created_at,
   c.created_by_user_id,
   c.updated_at,
@@ -132,22 +124,7 @@ const INVOICES_AGG_JOIN = `LEFT JOIN LATERAL (
       COALESCE(i.balance_amount, 0)::numeric
     ) FILTER (
       WHERE i.due_date IS NULL OR (i.due_date::date >= CURRENT_DATE)
-    ), 0) AS balance_amount_not_overdue_invoices,
-    /*
-     * Facturas vencidas con saldo pendiente: balance > 0 y vencimiento (due_date) estrictamente anterior a hoy.
-     */
-    COUNT(*) FILTER (
-      WHERE i.due_date IS NOT NULL
-        AND (i.due_date::date < CURRENT_DATE)
-        AND COALESCE(i.balance_amount, 0)::numeric > 0
-    )::int AS quantity_invoices_overdue,
-    COALESCE(SUM(
-      COALESCE(i.balance_amount, 0)::numeric
-    ) FILTER (
-      WHERE i.due_date IS NOT NULL
-        AND (i.due_date::date < CURRENT_DATE)
-        AND COALESCE(i.balance_amount, 0)::numeric > 0
-    ), 0) AS total_invoices_overdue
+    ), 0) AS balance_amount_not_overdue_invoices
   FROM public.invoices i
   WHERE i.id_contact = c.id_contact AND i.deleted_at IS NULL
 ) ai ON true`;
@@ -194,8 +171,6 @@ export const FIELD_MAP: Record<string, string> = {
   payment_amount_all_invoices:       'ai.payment_amount_all_invoices',
   balance_amount_overdue_invoices:   'ai.balance_amount_overdue_invoices',
   balance_amount_not_overdue_invoices: 'ai.balance_amount_not_overdue_invoices',
-  quantity_invoices_overdue:         'ai.quantity_invoices_overdue',
-  total_invoices_overdue:            'ai.total_invoices_overdue',
   created_at:         'c.created_at',
   created_by_user_id: 'c.created_by_user_id',
   updated_at:         'c.updated_at',
@@ -350,7 +325,20 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
   const where = conditions.join(' AND ');
   const offset = (filters.page - 1) * filters.limit;
 
-  const [countResult, totalsResult, globalTotalsResult] = await Promise.all([
+  const overdueInvoicesSql = `
+    SELECT
+      COUNT(*)::int AS quantity_invoices_overdue,
+      COALESCE(SUM(COALESCE(i.balance_amount, 0)::numeric), 0)::double precision AS total_invoices_overdue
+    FROM public.invoices i
+    INNER JOIN public.contacts c ON c.id_contact = i.id_contact AND c.deleted_at IS NULL
+    ${CITY_JOINS}
+    WHERE i.deleted_at IS NULL
+      AND ${where}
+      AND i.due_date IS NOT NULL
+      AND (i.due_date::date < CURRENT_DATE)
+      AND COALESCE(i.balance_amount, 0)::numeric > 0`;
+
+  const [countResult, totalsResult, globalTotalsResult, overdueInvoicesResult] = await Promise.all([
     db.query(
       `SELECT COUNT(*)::int AS total
        FROM public.contacts c
@@ -383,6 +371,7 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
       params
     ),
     db.query(GLOBAL_TOTALS_SELECT),
+    db.query(overdueInvoicesSql, params),
   ]);
   const total: number = countResult.rows[0]?.total ?? 0;
   const total_customers: number    = totalsResult.rows[0]?.total_customers ?? 0;
@@ -414,13 +403,15 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
   const total_dormidos: number     = totalsResult.rows[0]?.total_dormidos ?? 0;
   const total_perdidos: number     = totalsResult.rows[0]?.total_perdidos ?? 0;
   const total_mas_antiguos: number = totalsResult.rows[0]?.total_mas_antiguos ?? 0;
+  const quantity_invoices_overdue: number =
+    overdueInvoicesResult.rows[0]?.quantity_invoices_overdue ?? 0;
+  const total_invoices_overdue: number =
+    Number(overdueInvoicesResult.rows[0]?.total_invoices_overdue ?? 0);
 
   const selectClause =
     filters.fields && filters.fields.length > 0
       ? filters.fields.map((f) => `${FIELD_MAP[f]} AS ${f}`).join(', ')
-      : filters.has_balance_amount_overdue_invoices === true
-        ? LIST_SELECT + LIST_SELECT_OVERDUE_INVOICE_COUNTS
-        : LIST_SELECT;
+      : LIST_SELECT;
 
   const needsTagJoin =
     !filters.fields ||
@@ -466,13 +457,10 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     'payment_amount_all_invoices',
     'balance_amount_overdue_invoices',
     'balance_amount_not_overdue_invoices',
-    'quantity_invoices_overdue',
-    'total_invoices_overdue',
   ] as const;
   const needsInvoicesAggJoin =
     !filters.fields ||
     filters.fields.length === 0 ||
-    filters.has_balance_amount_overdue_invoices === true ||
     filters.fields.some((f) =>
       (invoiceAggFieldNames as readonly string[]).includes(f)
     );
@@ -525,6 +513,8 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     total_dormidos,
     total_perdidos,
     total_mas_antiguos,
+    quantity_invoices_overdue,
+    total_invoices_overdue,
   };
 }
 
