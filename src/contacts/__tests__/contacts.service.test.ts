@@ -25,6 +25,11 @@ describe('parseFiltersString', () => {
     expect(result.is_in_reassigned).toBe(true);
   });
 
+  it('parses has_balance_amount_overdue_invoices boolean filter', () => {
+    const result = parseFiltersString('has_balance_amount_overdue_invoices:true');
+    expect(result.has_balance_amount_overdue_invoices).toBe(true);
+  });
+
   it('parses multiple filters', () => {
     const result = parseFiltersString('is_prospect:true,is_customer:false,is_supplier:true');
     expect(result.is_prospect).toBe(true);

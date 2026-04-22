@@ -245,6 +245,52 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     params.push(filters.is_in_reassigned);
   }
 
+  if (filters.has_balance_amount_overdue_invoices !== undefined) {
+    if (filters.has_balance_amount_overdue_invoices) {
+      conditions.push(
+        `EXISTS (
+          SELECT 1
+          FROM public.invoices i
+          WHERE i.id_contact = c.id_contact
+            AND i.deleted_at IS NULL
+            AND i.due_date IS NOT NULL
+            AND i.due_date::date < CURRENT_DATE
+            AND (
+              CASE
+                WHEN i.balance_amount IS NOT NULL AND (i.balance_amount::numeric <> 0)
+                  THEN i.balance_amount::numeric
+                ELSE GREATEST(
+                  COALESCE(i.total_amount, 0)::numeric - COALESCE(i.payment_amount, 0)::numeric,
+                  0::numeric
+                )
+              END
+            ) > 0
+        )`
+      );
+    } else {
+      conditions.push(
+        `NOT EXISTS (
+          SELECT 1
+          FROM public.invoices i
+          WHERE i.id_contact = c.id_contact
+            AND i.deleted_at IS NULL
+            AND i.due_date IS NOT NULL
+            AND i.due_date::date < CURRENT_DATE
+            AND (
+              CASE
+                WHEN i.balance_amount IS NOT NULL AND (i.balance_amount::numeric <> 0)
+                  THEN i.balance_amount::numeric
+                ELSE GREATEST(
+                  COALESCE(i.total_amount, 0)::numeric - COALESCE(i.payment_amount, 0)::numeric,
+                  0::numeric
+                )
+              END
+            ) > 0
+        )`
+      );
+    }
+  }
+
   if (filters.id_seller) {
     conditions.push(`c.id_seller = $${idx++}`);
     params.push(filters.id_seller);

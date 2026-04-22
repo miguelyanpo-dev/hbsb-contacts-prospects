@@ -110,6 +110,7 @@ export const ContactQuerySchema = z.object({
   is_in_reassigned: z.enum(['true', 'false']).optional(),
   is_excluded:    z.enum(['true', 'false']).optional(),
   is_blacklisted: z.enum(['true', 'false']).optional(),
+  has_balance_amount_overdue_invoices: z.enum(['true', 'false']).optional(),
   page:           z.string().regex(/^\d+$/, 'page debe ser un entero').optional(),
   limit:          z.string().regex(/^\d+$/, 'limit debe ser un entero').optional(),
   id_city:        z.union([z.string().regex(/^\d+$/, 'id_city debe ser un entero'), z.literal('')]).optional().openapi({ description: 'Filtrar por id de ciudad (vacío para no filtrar)' }),
@@ -135,6 +136,7 @@ export interface ContactFilters {
   is_excluded?: boolean;
   is_in_my_followups?: boolean;
   is_in_reassigned?: boolean;
+  has_balance_amount_overdue_invoices?: boolean;
   search?: string;
   contact_name?: string;
   identification?: string;

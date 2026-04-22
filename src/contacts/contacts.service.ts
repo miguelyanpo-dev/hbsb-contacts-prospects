@@ -23,6 +23,7 @@ const BOOLEAN_FILTER_KEYS = new Set([
   'is_excluded',
   'is_in_my_followups',
   'is_in_reassigned',
+  'has_balance_amount_overdue_invoices',
 ]);
 
 // ─── Parse filters string into ContactFilters (without page/limit/fields) ─────
@@ -130,6 +131,10 @@ export async function listContacts(db: Pool, rawQuery: ContactQueryRaw) {
   }
   if (rawQuery.is_blacklisted !== undefined) {
     filtersBase.is_blacklisted = rawQuery.is_blacklisted === 'true';
+  }
+  if (rawQuery.has_balance_amount_overdue_invoices !== undefined) {
+    filtersBase.has_balance_amount_overdue_invoices =
+      rawQuery.has_balance_amount_overdue_invoices === 'true';
   }
   if (rawQuery.contact_name)   filtersBase.contact_name   = rawQuery.contact_name;
   if (rawQuery.identification) filtersBase.identification = rawQuery.identification;
