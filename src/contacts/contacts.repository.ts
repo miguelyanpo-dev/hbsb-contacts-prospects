@@ -112,32 +112,16 @@ const INVOICES_AGG_JOIN = `LEFT JOIN LATERAL (
     COALESCE(SUM(i.total_amount), 0) AS total_amount_all_invoices,
     COALESCE(SUM(i.payment_amount), 0) AS payment_amount_all_invoices,
     /*
-     * Saldo por línea para cartera vencida / no vencida:
-     * - Si balance_amount existe y es distinto de 0, se usa (valor en BD).
-     * - Si es NULL o 0, se usa max(0, total_amount - payment_amount) por si balance_amount no está poblado.
-     * Vencimiento: fecha calendario de due_date vs CURRENT_DATE (sesión PG).
+     * Cartera vencida / no vencida: solo balance_amount (incluye NC en BD), no total - payment.
+     * Vencimiento: due_date calendario vs CURRENT_DATE (sesión PG).
      */
     COALESCE(SUM(
-      (CASE
-        WHEN i.balance_amount IS NOT NULL AND (i.balance_amount::numeric <> 0)
-          THEN i.balance_amount::numeric
-        ELSE GREATEST(
-          COALESCE(i.total_amount, 0)::numeric - COALESCE(i.payment_amount, 0)::numeric,
-          0::numeric
-        )
-      END)
+      COALESCE(i.balance_amount, 0)::numeric
     ) FILTER (
       WHERE i.due_date IS NOT NULL AND (i.due_date::date < CURRENT_DATE)
     ), 0) AS balance_amount_overdue_invoices,
     COALESCE(SUM(
-      (CASE
-        WHEN i.balance_amount IS NOT NULL AND (i.balance_amount::numeric <> 0)
-          THEN i.balance_amount::numeric
-        ELSE GREATEST(
-          COALESCE(i.total_amount, 0)::numeric - COALESCE(i.payment_amount, 0)::numeric,
-          0::numeric
-        )
-      END)
+      COALESCE(i.balance_amount, 0)::numeric
     ) FILTER (
       WHERE i.due_date IS NULL OR (i.due_date::date >= CURRENT_DATE)
     ), 0) AS balance_amount_not_overdue_invoices
@@ -255,16 +239,7 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
             AND i.deleted_at IS NULL
             AND i.due_date IS NOT NULL
             AND i.due_date::date < CURRENT_DATE
-            AND (
-              CASE
-                WHEN i.balance_amount IS NOT NULL AND (i.balance_amount::numeric <> 0)
-                  THEN i.balance_amount::numeric
-                ELSE GREATEST(
-                  COALESCE(i.total_amount, 0)::numeric - COALESCE(i.payment_amount, 0)::numeric,
-                  0::numeric
-                )
-              END
-            ) > 0
+            AND COALESCE(i.balance_amount, 0)::numeric > 0
         )`
       );
     } else {
@@ -276,16 +251,7 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
             AND i.deleted_at IS NULL
             AND i.due_date IS NOT NULL
             AND i.due_date::date < CURRENT_DATE
-            AND (
-              CASE
-                WHEN i.balance_amount IS NOT NULL AND (i.balance_amount::numeric <> 0)
-                  THEN i.balance_amount::numeric
-                ELSE GREATEST(
-                  COALESCE(i.total_amount, 0)::numeric - COALESCE(i.payment_amount, 0)::numeric,
-                  0::numeric
-                )
-              END
-            ) > 0
+            AND COALESCE(i.balance_amount, 0)::numeric > 0
         )`
       );
     }
