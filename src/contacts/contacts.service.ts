@@ -174,7 +174,13 @@ export async function listContacts(db: Pool, rawQuery: ContactQueryRaw) {
     if (!isNaN(parsed)) filtersBase.seller_id_contact = parsed;
   }
 
-  const fields = parseFieldsString(rawQuery.fields);
+  let fields = parseFieldsString(rawQuery.fields);
+  if (rawQuery.has_balance_amount_overdue_invoices === 'true' && fields.length > 0) {
+    const merged = new Set(fields);
+    merged.add('quantity_invoices_overdue');
+    merged.add('total_invoices_overdue');
+    fields = Array.from(merged).filter((f) => f in FIELD_MAP);
+  }
   const page = rawQuery.page !== undefined ? Math.max(1, parseInt(rawQuery.page, 10)) : 1;
   const limit =
     rawQuery.limit !== undefined ? Math.min(100, Math.max(1, parseInt(rawQuery.limit, 10))) : 20;

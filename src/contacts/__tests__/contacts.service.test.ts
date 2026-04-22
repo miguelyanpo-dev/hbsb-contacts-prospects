@@ -161,6 +161,14 @@ describe('parseFieldsString', () => {
     ]);
   });
 
+  it('allows overdue invoice count and balance sum fields', () => {
+    expect(parseFieldsString('id_contact,quantity_invoices_overdue,total_invoices_overdue')).toEqual([
+      'id_contact',
+      'quantity_invoices_overdue',
+      'total_invoices_overdue',
+    ]);
+  });
+
   it('allows invoices-backed field last_invoice', () => {
     expect(parseFieldsString('id_contact,last_invoice')).toEqual([
       'id_contact',

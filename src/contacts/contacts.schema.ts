@@ -22,6 +22,10 @@ export const ContactListItemSchema = z.object({
   payment_amount_all_invoices: z.number(),
   balance_amount_overdue_invoices: z.number(),
   balance_amount_not_overdue_invoices: z.number(),
+  /** Cantidad de facturas con saldo > 0 y due_date anterior a hoy (misma regla que el filtro de cartera vencida). */
+  quantity_invoices_overdue: z.number().int().optional(),
+  /** Suma de balance_amount de esas facturas (saldo vencido pendiente). */
+  total_invoices_overdue: z.number().optional(),
   city_name: z.string().nullable(),
   region_name: z.string().nullable(),
   created_at: z.string().nullable(),
@@ -60,6 +64,8 @@ export const ContactSchema = z.object({
   payment_amount_all_invoices: z.number(),
   balance_amount_overdue_invoices: z.number(),
   balance_amount_not_overdue_invoices: z.number(),
+  quantity_invoices_overdue: z.number().int().optional(),
+  total_invoices_overdue: z.number().optional(),
   city_name: z.string().nullable(),
   region_name: z.string().nullable(),
   created_at: z.string().nullable(),

@@ -31,6 +31,12 @@ const LIST_SELECT = `
   c.updated_by_user_id
 `;
 
+/** Sufijo de SELECT de listado cuando se filtra por facturas vencidas con saldo pendiente. */
+const LIST_SELECT_OVERDUE_INVOICE_COUNTS = `,
+  ai.quantity_invoices_overdue,
+  ai.total_invoices_overdue
+`;
+
 /**
  * Columns for the detail view: all contact fields + city/region via JOIN.
  */
@@ -62,6 +68,8 @@ const DETAIL_SELECT = `
   ai.payment_amount_all_invoices,
   ai.balance_amount_overdue_invoices,
   ai.balance_amount_not_overdue_invoices,
+  ai.quantity_invoices_overdue,
+  ai.total_invoices_overdue,
   c.created_at,
   c.created_by_user_id,
   c.updated_at,
@@ -124,7 +132,22 @@ const INVOICES_AGG_JOIN = `LEFT JOIN LATERAL (
       COALESCE(i.balance_amount, 0)::numeric
     ) FILTER (
       WHERE i.due_date IS NULL OR (i.due_date::date >= CURRENT_DATE)
-    ), 0) AS balance_amount_not_overdue_invoices
+    ), 0) AS balance_amount_not_overdue_invoices,
+    /*
+     * Facturas vencidas con saldo pendiente: balance > 0 y vencimiento (due_date) estrictamente anterior a hoy.
+     */
+    COUNT(*) FILTER (
+      WHERE i.due_date IS NOT NULL
+        AND (i.due_date::date < CURRENT_DATE)
+        AND COALESCE(i.balance_amount, 0)::numeric > 0
+    )::int AS quantity_invoices_overdue,
+    COALESCE(SUM(
+      COALESCE(i.balance_amount, 0)::numeric
+    ) FILTER (
+      WHERE i.due_date IS NOT NULL
+        AND (i.due_date::date < CURRENT_DATE)
+        AND COALESCE(i.balance_amount, 0)::numeric > 0
+    ), 0) AS total_invoices_overdue
   FROM public.invoices i
   WHERE i.id_contact = c.id_contact AND i.deleted_at IS NULL
 ) ai ON true`;
@@ -171,6 +194,8 @@ export const FIELD_MAP: Record<string, string> = {
   payment_amount_all_invoices:       'ai.payment_amount_all_invoices',
   balance_amount_overdue_invoices:   'ai.balance_amount_overdue_invoices',
   balance_amount_not_overdue_invoices: 'ai.balance_amount_not_overdue_invoices',
+  quantity_invoices_overdue:         'ai.quantity_invoices_overdue',
+  total_invoices_overdue:            'ai.total_invoices_overdue',
   created_at:         'c.created_at',
   created_by_user_id: 'c.created_by_user_id',
   updated_at:         'c.updated_at',
@@ -393,7 +418,9 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
   const selectClause =
     filters.fields && filters.fields.length > 0
       ? filters.fields.map((f) => `${FIELD_MAP[f]} AS ${f}`).join(', ')
-      : LIST_SELECT;
+      : filters.has_balance_amount_overdue_invoices === true
+        ? LIST_SELECT + LIST_SELECT_OVERDUE_INVOICE_COUNTS
+        : LIST_SELECT;
 
   const needsTagJoin =
     !filters.fields ||
@@ -439,10 +466,13 @@ export async function findAllContacts(db: Pool, filters: ContactFilters) {
     'payment_amount_all_invoices',
     'balance_amount_overdue_invoices',
     'balance_amount_not_overdue_invoices',
+    'quantity_invoices_overdue',
+    'total_invoices_overdue',
   ] as const;
   const needsInvoicesAggJoin =
     !filters.fields ||
     filters.fields.length === 0 ||
+    filters.has_balance_amount_overdue_invoices === true ||
     filters.fields.some((f) =>
       (invoiceAggFieldNames as readonly string[]).includes(f)
     );
